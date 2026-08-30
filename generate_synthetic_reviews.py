@@ -32,8 +32,8 @@ from datetime import datetime, timedelta
 random.seed(42)
 
 # --- Adjust to match your actual KPI synthetic data ---
-START_DATE = datetime(2025, 8, 1)
-TOTAL_DAYS = 180
+START_DATE = datetime(2026, 7, 27)
+TOTAL_DAYS = 30
 
 ANOMALY_EVENTS = {
     "flash_sale":       {"date": START_DATE + timedelta(days=40),  "window": 1},

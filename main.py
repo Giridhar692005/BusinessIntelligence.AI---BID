@@ -493,6 +493,29 @@ async def plot_base64(
     }
 
 
+from product_drivers import get_product_contribution_from_db, as_extra_drivers, get_net_profit_for_date
+
+@app.get("/product-drivers")
+async def product_drivers(
+    date: str = Query(...),
+    window: int = Query(14),
+    top_n: int = Query(5),
+):
+    try:
+        result = get_product_contribution_from_db(date, window=window, top_n=top_n)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Product driver analysis failed: {e}")
+    return result
+
+
+@app.get("/net-profit")
+async def net_profit(date: str = Query(...)):
+    try:
+        return get_net_profit_for_date(date)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Net profit calculation failed: {e}")
+    
+    
 @app.post("/root-cause")
 async def root_cause(
     file: UploadFile = File(...),
@@ -524,12 +547,19 @@ async def root_cause(
     # STEP 1: Existing root-cause engine
     # --------------------------------------------------
 
+    extra_drivers = []
+    try:
+       contribution = get_product_contribution_from_db(date, window=window)
+       extra_drivers = as_extra_drivers(contribution)
+    except Exception:
+        pass  # product breakdown is optional -- never let it block the KPI-level report
+
     report = full_root_cause_report(
-        df,
-        date,
-        kpi_columns=DEFAULT_KPI_COLUMNS,
-        window=window,
-        threshold=threshold
+      df, date,
+      kpi_columns=[...],  # whatever you already pass
+      window=window,
+      threshold=threshold,
+      extra_drivers=extra_drivers,
     )
 
    # --------------------------------------------------
@@ -736,14 +766,27 @@ async def narrative(
     # 3. Statistical root-cause analysis
     # --------------------------------------------------
 
-    report = full_root_cause_report(
-        df,
-        date,
-        kpi_columns=DEFAULT_KPI_COLUMNS,
-        window=window,
-        threshold=threshold
-    )
+    extra_drivers = []
+    try:
+        contribution = get_product_contribution_from_db(date, window=window)
+        extra_drivers = as_extra_drivers(contribution)
+    except Exception:
+        pass  # product breakdown is optional -- never let it block the KPI-level report
 
+    report = full_root_cause_report(
+    df, date,
+    kpi_columns=[...],  # whatever you already pass
+    window=window,
+    threshold=threshold,
+    extra_drivers=extra_drivers,
+    )
+    net_profit = None
+    try:
+       net_profit = get_net_profit_for_date(date)
+    except Exception:
+       pass  # optional -- never block the KPI-level report if RawData isn't populated
+
+    report["net_profit_snapshot"] = net_profit
 
     # --------------------------------------------------
     # 4. Retrieve supporting evidence

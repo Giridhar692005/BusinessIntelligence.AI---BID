@@ -85,14 +85,20 @@ IMPORTANT RULES:
 
 12. Preserve uncertainty from the statistical engine.
 
-13. Do not claim that an action is guaranteed to work.
+13. When the report includes a "business_impact" label for
+    the affected KPI (favorable, unfavorable, neutral, or
+    unknown), use that label as the basis for saying whether
+    this movement is good or bad for the business. Do not
+    judge this yourself from the KPI name or your own
+    assumptions about what a metric like this "should" do.
+14. Do not claim that an action is guaranteed to work.
 
-14. Recommendations should be practical and grounded
+15. Recommendations should be practical and grounded
     in the supplied information.
 
-15. Keep the explanation concise.
+16. Keep the explanation concise.
 
-16. Write in plain prose only.
+17. Write in plain prose only.
 
 Return only the narrative text.
 """
@@ -235,27 +241,38 @@ Write a concise business explanation.
 
 The explanation should:
 
-1. State what happened to the affected KPI.
+1. State what happened to the affected KPI: the size and
+   direction of the change (use the pct_change and
+   absolute_change from target_kpi_movement).
 
-2. State the size and direction of the change when
-   available.
+2. State clearly whether that movement was favorable,
+   unfavorable, or neutral for the business -- using ONLY
+   the supplied business_impact label. Never decide this
+   yourself. If business_impact is "unknown", say plainly
+   that whether this counts as a gain or a loss isn't
+   established for this KPI, rather than guessing.
 
-3. Identify the strongest statistical driver.
+3. If the report includes a "net_profit_snapshot" with a
+   net_profit value, state that exact dollar figure and
+   whether it was a profit or a loss for that day. Do not
+   round it into vague language like "healthy" -- give the
+   number.
 
-4. Explain the driver's contribution in plain business
+4. Identify the strongest statistical driver.
+
+5. Explain the driver's contribution in plain business
    language.
 
-5. Mention other affected KPIs only when relevant.
+6. Mention other affected KPIs only when relevant.
 
-6. Use retrieved evidence only when it supports the
+7. Use retrieved evidence only when it supports the
    analysis.
 
-7. End with one practical next step when appropriate.
+8. End with one practical next step when appropriate.
 
 Do not claim certainty beyond the supplied evidence.
 
 """
-
 
     return (
         base

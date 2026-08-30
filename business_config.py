@@ -38,7 +38,19 @@ BUSINESS_CONFIG = {
         "ad_spend"
 
     ],
-     
+    # Whether a HIGHER value of each KPI is good for the business.
+    # True = higher is better, False = lower is better,
+    # omit a KPI entirely if direction genuinely depends on context --
+    # the narrative will then say "not established" rather than guess.
+    "kpi_direction": {
+        "revenue": True,
+        "conversion_rate": True,
+        "orders": True,
+        "visitors": True,
+        "aov": True,
+        "cac": False,          # lower cost-per-acquisition is better
+        "ad_spend": None,      # ambiguous on its own -- context-dependent
+    },
     # -----------------------------------------------------
     # Personas
     #

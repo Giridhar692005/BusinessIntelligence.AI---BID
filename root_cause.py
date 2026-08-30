@@ -42,6 +42,33 @@ def _get_target_factors(target_kpi: str, df: pd.DataFrame) -> list:
         if factor in df.columns
     ]
 
+def _kpi_direction(target_kpi: str):
+    """
+    Looks up whether a higher value of this KPI is good for the
+    business, from business_config.py's "kpi_direction" map.
+
+    Returns True (higher is better), False (lower is better),
+    or None if not configured -- we deliberately do NOT guess a
+    default, since assuming "revenue-like" behavior for an
+    unconfigured KPI would violate the business-agnostic design.
+    """
+    return BUSINESS_CONFIG.get("kpi_direction", {}).get(target_kpi)
+
+
+def _business_impact_label(pct_change: float, higher_is_better) -> str:
+    """
+    Deterministic favorable/unfavorable/neutral/unknown label.
+    Never decided by the LLM -- computed here so the narrative
+    only has to report it, not judge it.
+    """
+    if higher_is_better is None:
+        return "unknown"
+    if abs(pct_change) < 0.5:
+        return "neutral"
+    moved_up = pct_change > 0
+    if higher_is_better:
+        return "favorable" if moved_up else "unfavorable"
+    return "unfavorable" if moved_up else "favorable"
 
 def _get_numeric_columns(
     df: pd.DataFrame,
@@ -164,13 +191,41 @@ def analyze_drivers(
         ),
         reverse=True
     )
+    target_kpi_movement = None
 
+    if target_kpi in df.columns:
+        target_baseline_avg = baseline[target_kpi].mean()
+        target_today_value = df.loc[idx, target_kpi]
+
+        if (
+            target_baseline_avg == 0
+            or pd.isna(target_baseline_avg)
+            or pd.isna(target_today_value)
+        ):
+            target_pct_change = 0.0
+        else:
+            target_pct_change = (
+                (target_today_value - target_baseline_avg)
+                / target_baseline_avg
+            ) * 100
+
+        higher_is_better = _kpi_direction(target_kpi)
+
+        target_kpi_movement = {
+            "today_value": round(float(target_today_value), 4),
+            "baseline_avg": round(float(target_baseline_avg), 4),
+            "absolute_change": round(float(target_today_value - target_baseline_avg), 4),
+            "pct_change": round(float(target_pct_change), 2),
+            "higher_is_better": higher_is_better,
+            "business_impact": _business_impact_label(target_pct_change, higher_is_better),
+        }
     return {
         "anomaly_date": anomaly_date,
         "target_kpi": target_kpi,
-        "drivers_ranked": [
+             "drivers_ranked": [
             {
                 "factor": factor,
+                "driver_type": "kpi_factor",
                 **values
             }
             for factor, values in ranked
@@ -187,7 +242,36 @@ def analyze_drivers(
         )
     }
 
+# =========================================================
+# MERGE IN EXTERNALLY-COMPUTED DRIVERS (e.g. product-level)
+# =========================================================
 
+def merge_extra_drivers(drivers_result: dict, extra_drivers: list) -> dict:
+    """
+    Merge additional pre-computed drivers (e.g. product-level contribution
+    entries from product_drivers.py) into an existing drivers_result from
+    analyze_drivers(), re-rank everything together by |pct_change|, and
+    recompute primary_driver / primary_driver_pct_change.
+
+    Each entry in extra_drivers must already look like a driver:
+        {"factor": <name>, "today_value": <num>, "baseline_avg": <num>,
+         "pct_change": <num>, ...any extra keys are kept as-is}
+
+    This function has no idea what "extra_drivers" actually represent --
+    that decision belongs to the caller, keeping this file business-agnostic.
+    """
+    if not extra_drivers:
+        return drivers_result
+
+    combined = list(drivers_result.get("drivers_ranked", [])) + list(extra_drivers)
+    combined.sort(key=lambda d: abs(d.get("pct_change") or 0), reverse=True)
+
+    merged = dict(drivers_result)
+    merged["drivers_ranked"] = combined
+    merged["primary_driver"] = combined[0]["factor"] if combined else None
+    merged["primary_driver_pct_change"] = combined[0].get("pct_change") if combined else None
+
+    return merged
 # =========================================================
 # BACKWARD COMPATIBILITY
 # =========================================================
@@ -393,7 +477,8 @@ def full_root_cause_report(
     anomaly_date: str,
     kpi_columns: list = None,
     window: int = 14,
-    threshold: float = 2.5
+    threshold: float = 2.5,
+    extra_drivers: list = None,
 ) -> dict:
     """
     Existing public function preserved.
@@ -502,7 +587,16 @@ def full_root_cause_report(
         window=window
     )
 
+    # Merge in caller-supplied extra drivers (e.g. product-level
+    # contribution) so they compete for primary_driver on equal footing.
+    # Must happen before compute_confidence() so confidence reflects the
+    # merged ranking, not the pre-merge one.
+    drivers_result = merge_extra_drivers(drivers_result, extra_drivers)
 
+
+    # -----------------------------------------------------
+    # Multi-KPI check
+    # -----------------------------------------------------
     # -----------------------------------------------------
     # Multi-KPI check
     # -----------------------------------------------------
