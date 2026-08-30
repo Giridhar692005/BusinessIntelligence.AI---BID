@@ -1,0 +1,83 @@
+{
+  "conversion_rate": [
+    {
+      "action": "Investigate checkout and conversion funnel",
+      "lever": "Conversion optimisation",
+      "owner": "Product / Growth",
+      "expected_impact": "Increase conversion rate",
+      "monitor": "Conversion rate, checkout abandonment"
+    },
+    {
+      "action": "Run a conversion-focused campaign or offer",
+      "lever": "Promotion",
+      "owner": "Marketing",
+      "expected_impact": "Increase completed purchases",
+      "monitor": "Conversion rate, orders, revenue"
+    },
+    {
+      "action": "Review landing-page and user journey performance",
+      "lever": "User experience",
+      "owner": "Product / Marketing",
+      "expected_impact": "Reduce funnel drop-off",
+      "monitor": "Landing conversion, bounce rate"
+    }
+  ],
+
+  "revenue": [
+    {
+      "action": "Investigate the largest contributing revenue driver",
+      "lever": "Revenue optimisation",
+      "owner": "Business / Growth",
+      "expected_impact": "Recover lost revenue",
+      "monitor": "Revenue and primary driver"
+    },
+    {
+      "action": "Review pricing and promotional strategy",
+      "lever": "Pricing",
+      "owner": "Commercial",
+      "expected_impact": "Improve revenue",
+      "monitor": "Revenue, AOV, conversion rate"
+    },
+    {
+      "action": "Review marketing channel performance",
+      "lever": "Marketing",
+      "owner": "Marketing",
+      "expected_impact": "Recover demand",
+      "monitor": "Traffic, CAC, conversion rate"
+    }
+  ],
+
+  "aov": [
+    {
+      "action": "Introduce relevant product bundles",
+      "lever": "Basket expansion",
+      "owner": "Commercial",
+      "expected_impact": "Increase average order value",
+      "monitor": "AOV, items per order"
+    },
+    {
+      "action": "Review upselling and cross-selling opportunities",
+      "lever": "Upselling",
+      "owner": "Growth",
+      "expected_impact": "Increase order value",
+      "monitor": "AOV, attach rate"
+    }
+  ],
+
+  "cac": [
+    {
+      "action": "Review underperforming acquisition channels",
+      "lever": "Marketing efficiency",
+      "owner": "Marketing",
+      "expected_impact": "Reduce customer acquisition cost",
+      "monitor": "CAC, channel ROI"
+    },
+    {
+      "action": "Reallocate spend toward higher-performing channels",
+      "lever": "Budget allocation",
+      "owner": "Marketing",
+      "expected_impact": "Improve acquisition efficiency",
+      "monitor": "CAC, ROAS"
+    }
+  ]
+}

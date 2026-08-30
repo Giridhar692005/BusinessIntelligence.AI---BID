@@ -1,0 +1,340 @@
+id,date,text,source
+txt_0000,2025-08-01,"Decent quality for the price, would probably buy again.",review
+txt_0001,2025-08-01,"Shipping was faster than I expected, product arrived in great shape.",review
+txt_0002,2025-08-01,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0003,2025-08-02,"Decent quality for the price, would probably buy again.",ticket
+txt_0004,2025-08-02,"Great value, will be shopping here again.",review
+txt_0005,2025-08-02,"Decent quality for the price, would probably buy again.",review
+txt_0006,2025-08-04,Customer service was helpful when I had a sizing question.,review
+txt_0007,2025-08-05,Customer service was helpful when I had a sizing question.,ticket
+txt_0008,2025-08-05,"Great value, will be shopping here again.",review
+txt_0009,2025-08-06,The color was slightly different from the photos but still nice.,review
+txt_0010,2025-08-06,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0011,2025-08-07,"Love this, already ordered a second one for a friend.",review
+txt_0012,2025-08-07,Exactly as described on the product page.,review
+txt_0013,2025-08-07,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0014,2025-08-10,"Decent quality for the price, would probably buy again.",review
+txt_0015,2025-08-10,Exactly as described on the product page.,review
+txt_0016,2025-08-12,"It's okay, nothing special but does the job.",ticket
+txt_0017,2025-08-12,"Great value, will be shopping here again.",review
+txt_0018,2025-08-12,"Decent quality for the price, would probably buy again.",review
+txt_0019,2025-08-13,The color was slightly different from the photos but still nice.,review
+txt_0020,2025-08-13,Exactly as described on the product page.,review
+txt_0021,2025-08-13,The color was slightly different from the photos but still nice.,review
+txt_0022,2025-08-14,Customer service was helpful when I had a sizing question.,review
+txt_0023,2025-08-14,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0024,2025-08-14,"Decent quality for the price, would probably buy again.",ticket
+txt_0025,2025-08-15,"It's okay, nothing special but does the job.",review
+txt_0026,2025-08-16,Exactly as described on the product page.,review
+txt_0027,2025-08-17,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0028,2025-08-18,Packaging could be better but the item itself is fine.,review
+txt_0029,2025-08-18,"Great value, will be shopping here again.",review
+txt_0030,2025-08-19,"Love this, already ordered a second one for a friend.",review
+txt_0031,2025-08-19,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0032,2025-08-21,"Shipping was faster than I expected, product arrived in great shape.",review
+txt_0033,2025-08-22,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0034,2025-08-22,"Decent quality for the price, would probably buy again.",review
+txt_0035,2025-08-23,"It's okay, nothing special but does the job.",ticket
+txt_0036,2025-08-24,"It's okay, nothing special but does the job.",review
+txt_0037,2025-08-24,Packaging could be better but the item itself is fine.,review
+txt_0038,2025-08-24,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0039,2025-08-25,The color was slightly different from the photos but still nice.,ticket
+txt_0040,2025-08-25,"Love this, already ordered a second one for a friend.",review
+txt_0041,2025-08-25,The color was slightly different from the photos but still nice.,review
+txt_0042,2025-08-26,"Great value, will be shopping here again.",ticket
+txt_0043,2025-08-30,Packaging could be better but the item itself is fine.,ticket
+txt_0044,2025-08-31,"Decent quality for the price, would probably buy again.",ticket
+txt_0045,2025-08-31,"Love this, already ordered a second one for a friend.",ticket
+txt_0046,2025-09-01,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0047,2025-09-01,"Great value, will be shopping here again.",review
+txt_0048,2025-09-02,"Great value, will be shopping here again.",review
+txt_0049,2025-09-02,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0050,2025-09-02,Exactly as described on the product page.,ticket
+txt_0051,2025-09-03,"It's okay, nothing special but does the job.",review
+txt_0052,2025-09-04,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0053,2025-09-04,"Great value, will be shopping here again.",review
+txt_0054,2025-09-04,Packaging could be better but the item itself is fine.,review
+txt_0055,2025-09-05,Exactly as described on the product page.,review
+txt_0056,2025-09-06,"Great value, will be shopping here again.",review
+txt_0057,2025-09-06,"Shipping was faster than I expected, product arrived in great shape.",ticket
+txt_0058,2025-09-09,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0059,2025-09-10,"Saw the deal pop up and bought immediately, glad I did.",review
+txt_0060,2025-09-10,"Saw the deal pop up and bought immediately, glad I did.",review
+txt_0061,2025-09-10,"Cart almost sold out during the flash sale, happy I got mine.",ticket
+txt_0062,2025-09-10,"Saw the deal pop up and bought immediately, glad I did.",review
+txt_0063,2025-09-10,"Best discount I've seen from this store all year, stocked up.",review
+txt_0064,2025-09-10,"Best discount I've seen from this store all year, stocked up.",review
+txt_0065,2025-09-10,"Cart almost sold out during the flash sale, happy I got mine.",ticket
+txt_0066,2025-09-11,Exactly as described on the product page.,ticket
+txt_0067,2025-09-11,"It's okay, nothing special but does the job.",review
+txt_0068,2025-09-11,"Great value, will be shopping here again.",review
+txt_0069,2025-09-12,"Decent quality for the price, would probably buy again.",review
+txt_0070,2025-09-14,"Great value, will be shopping here again.",review
+txt_0071,2025-09-14,Customer service was helpful when I had a sizing question.,review
+txt_0072,2025-09-16,"Shipping was faster than I expected, product arrived in great shape.",review
+txt_0073,2025-09-16,Customer service was helpful when I had a sizing question.,review
+txt_0074,2025-09-16,"Decent quality for the price, would probably buy again.",review
+txt_0075,2025-09-17,Customer service was helpful when I had a sizing question.,ticket
+txt_0076,2025-09-17,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0077,2025-09-18,Packaging could be better but the item itself is fine.,ticket
+txt_0078,2025-09-18,The color was slightly different from the photos but still nice.,review
+txt_0079,2025-09-19,"Love this, already ordered a second one for a friend.",review
+txt_0080,2025-09-19,Customer service was helpful when I had a sizing question.,review
+txt_0081,2025-09-20,"Love this, already ordered a second one for a friend.",ticket
+txt_0082,2025-09-20,Exactly as described on the product page.,ticket
+txt_0083,2025-09-20,"Love this, already ordered a second one for a friend.",review
+txt_0084,2025-09-21,"Decent quality for the price, would probably buy again.",review
+txt_0085,2025-09-21,"Shipping was faster than I expected, product arrived in great shape.",review
+txt_0086,2025-09-21,"Love this, already ordered a second one for a friend.",review
+txt_0087,2025-09-22,Customer service was helpful when I had a sizing question.,ticket
+txt_0088,2025-09-23,"Love this, already ordered a second one for a friend.",review
+txt_0089,2025-09-24,"It's okay, nothing special but does the job.",review
+txt_0090,2025-09-26,"Great value, will be shopping here again.",review
+txt_0091,2025-09-26,"Decent quality for the price, would probably buy again.",review
+txt_0092,2025-09-28,Packaging could be better but the item itself is fine.,ticket
+txt_0093,2025-09-29,"It's okay, nothing special but does the job.",ticket
+txt_0094,2025-09-29,Customer service was helpful when I had a sizing question.,review
+txt_0095,2025-09-30,"Love this, already ordered a second one for a friend.",review
+txt_0096,2025-10-01,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0097,2025-10-01,"It's okay, nothing special but does the job.",ticket
+txt_0098,2025-10-02,"Great value, will be shopping here again.",review
+txt_0099,2025-10-02,"It's okay, nothing special but does the job.",review
+txt_0100,2025-10-02,Packaging could be better but the item itself is fine.,review
+txt_0101,2025-10-04,"Great value, will be shopping here again.",review
+txt_0102,2025-10-04,"Shipping was faster than I expected, product arrived in great shape.",review
+txt_0103,2025-10-06,"It's okay, nothing special but does the job.",review
+txt_0104,2025-10-06,"Great value, will be shopping here again.",review
+txt_0105,2025-10-07,"Decent quality for the price, would probably buy again.",review
+txt_0106,2025-10-07,Packaging could be better but the item itself is fine.,review
+txt_0107,2025-10-08,Customer service was helpful when I had a sizing question.,review
+txt_0108,2025-10-08,"Love this, already ordered a second one for a friend.",review
+txt_0109,2025-10-08,"Decent quality for the price, would probably buy again.",review
+txt_0110,2025-10-09,The color was slightly different from the photos but still nice.,review
+txt_0111,2025-10-09,The color was slightly different from the photos but still nice.,review
+txt_0112,2025-10-10,Exactly as described on the product page.,review
+txt_0113,2025-10-11,"Love this, already ordered a second one for a friend.",review
+txt_0114,2025-10-12,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0115,2025-10-12,"It's okay, nothing special but does the job.",review
+txt_0116,2025-10-12,Exactly as described on the product page.,ticket
+txt_0117,2025-10-13,The color was slightly different from the photos but still nice.,review
+txt_0118,2025-10-13,"Decent quality for the price, would probably buy again.",review
+txt_0119,2025-10-14,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0120,2025-10-14,Packaging could be better but the item itself is fine.,review
+txt_0121,2025-10-15,Exactly as described on the product page.,review
+txt_0122,2025-10-16,"It's okay, nothing special but does the job.",review
+txt_0123,2025-10-17,"Great value, will be shopping here again.",review
+txt_0124,2025-10-17,"Shipping was faster than I expected, product arrived in great shape.",review
+txt_0125,2025-10-18,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0126,2025-10-20,"Great value, will be shopping here again.",review
+txt_0127,2025-10-20,Packaging could be better but the item itself is fine.,review
+txt_0128,2025-10-20,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0129,2025-10-21,"Not bad, took a bit longer to arrive than the estimate said.",ticket
+txt_0130,2025-10-22,"Shipping was faster than I expected, product arrived in great shape.",review
+txt_0131,2025-10-23,"Love this, already ordered a second one for a friend.",review
+txt_0132,2025-10-23,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0133,2025-10-23,"Shipping was faster than I expected, product arrived in great shape.",review
+txt_0134,2025-10-24,"Not bad, took a bit longer to arrive than the estimate said.",ticket
+txt_0135,2025-10-24,Packaging could be better but the item itself is fine.,review
+txt_0136,2025-10-24,"It's okay, nothing special but does the job.",review
+txt_0137,2025-10-25,"Checkout kept failing, had to try four times before it worked.",review
+txt_0138,2025-10-25,"Payment kept timing out, not sure if I got charged multiple times.",review
+txt_0139,2025-10-25,"Got an error page every time I tried to pay, gave up for a while.",review
+txt_0140,2025-10-25,Website was extremely slow and eventually just stopped responding.,review
+txt_0141,2025-10-25,"Got an error page every time I tried to pay, gave up for a while.",review
+txt_0142,2025-10-25,"Checkout kept failing, had to try four times before it worked.",review
+txt_0143,2025-10-25,"Couldn't complete my order for almost an hour, page wouldn't load.",review
+txt_0144,2025-10-26,"Love this, already ordered a second one for a friend.",review
+txt_0145,2025-10-26,The color was slightly different from the photos but still nice.,review
+txt_0146,2025-10-27,Packaging could be better but the item itself is fine.,ticket
+txt_0147,2025-10-29,Exactly as described on the product page.,ticket
+txt_0148,2025-10-30,Customer service was helpful when I had a sizing question.,review
+txt_0149,2025-10-30,"Not bad, took a bit longer to arrive than the estimate said.",ticket
+txt_0150,2025-10-30,Packaging could be better but the item itself is fine.,review
+txt_0151,2025-10-31,Customer service was helpful when I had a sizing question.,ticket
+txt_0152,2025-10-31,Customer service was helpful when I had a sizing question.,review
+txt_0153,2025-11-01,Customer service was helpful when I had a sizing question.,review
+txt_0154,2025-11-03,Customer service was helpful when I had a sizing question.,review
+txt_0155,2025-11-03,"Love this, already ordered a second one for a friend.",review
+txt_0156,2025-11-03,Exactly as described on the product page.,review
+txt_0157,2025-11-04,"Great value, will be shopping here again.",ticket
+txt_0158,2025-11-05,"Great value, will be shopping here again.",review
+txt_0159,2025-11-05,Exactly as described on the product page.,review
+txt_0160,2025-11-05,"Shipping was faster than I expected, product arrived in great shape.",review
+txt_0161,2025-11-06,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0162,2025-11-06,"Shipping was faster than I expected, product arrived in great shape.",ticket
+txt_0163,2025-11-07,Exactly as described on the product page.,ticket
+txt_0164,2025-11-08,"Great value, will be shopping here again.",ticket
+txt_0165,2025-11-08,"Decent quality for the price, would probably buy again.",review
+txt_0166,2025-11-09,"Shipping was faster than I expected, product arrived in great shape.",ticket
+txt_0167,2025-11-11,"Great value, will be shopping here again.",review
+txt_0168,2025-11-11,Customer service was helpful when I had a sizing question.,ticket
+txt_0169,2025-11-13,Exactly as described on the product page.,review
+txt_0170,2025-11-13,The color was slightly different from the photos but still nice.,review
+txt_0171,2025-11-13,Exactly as described on the product page.,review
+txt_0172,2025-11-14,"Love this, already ordered a second one for a friend.",review
+txt_0173,2025-11-14,Exactly as described on the product page.,review
+txt_0174,2025-11-14,"Love this, already ordered a second one for a friend.",review
+txt_0175,2025-11-15,"Love this, already ordered a second one for a friend.",review
+txt_0176,2025-11-15,Packaging could be better but the item itself is fine.,ticket
+txt_0177,2025-11-16,"Shipping was faster than I expected, product arrived in great shape.",review
+txt_0178,2025-11-16,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0179,2025-11-17,The color was slightly different from the photos but still nice.,review
+txt_0180,2025-11-17,The color was slightly different from the photos but still nice.,ticket
+txt_0181,2025-11-18,"It's okay, nothing special but does the job.",ticket
+txt_0182,2025-11-18,Customer service was helpful when I had a sizing question.,review
+txt_0183,2025-11-19,"Decent quality for the price, would probably buy again.",review
+txt_0184,2025-11-19,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0185,2025-11-19,"Great value, will be shopping here again.",review
+txt_0186,2025-11-20,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0187,2025-11-20,Customer service was helpful when I had a sizing question.,review
+txt_0188,2025-11-20,Customer service was helpful when I had a sizing question.,review
+txt_0189,2025-11-21,"It's okay, nothing special but does the job.",review
+txt_0190,2025-11-22,"Love this, already ordered a second one for a friend.",review
+txt_0191,2025-11-22,The color was slightly different from the photos but still nice.,ticket
+txt_0192,2025-11-23,"Love this, already ordered a second one for a friend.",review
+txt_0193,2025-11-23,Customer service was helpful when I had a sizing question.,review
+txt_0194,2025-11-25,Customer service was helpful when I had a sizing question.,ticket
+txt_0195,2025-11-25,Packaging could be better but the item itself is fine.,review
+txt_0196,2025-11-26,Customer service was helpful when I had a sizing question.,ticket
+txt_0197,2025-11-26,"Decent quality for the price, would probably buy again.",review
+txt_0198,2025-11-27,"Great value, will be shopping here again.",review
+txt_0199,2025-11-27,"Great value, will be shopping here again.",ticket
+txt_0200,2025-11-28,"Great value, will be shopping here again.",ticket
+txt_0201,2025-11-28,"Love this, already ordered a second one for a friend.",review
+txt_0202,2025-11-29,"It's okay, nothing special but does the job.",ticket
+txt_0203,2025-11-29,"It's okay, nothing special but does the job.",review
+txt_0204,2025-11-29,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0205,2025-11-29,Clicked the ad out of curiosity more than actual interest.,ticket
+txt_0206,2025-11-29,Not sure why I'm seeing so many ads for this store this week.,review
+txt_0207,2025-11-30,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0208,2025-11-30,Customer service was helpful when I had a sizing question.,review
+txt_0209,2025-11-30,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0210,2025-11-30,Clicked the ad out of curiosity more than actual interest.,ticket
+txt_0211,2025-11-30,Not sure why I'm seeing so many ads for this store this week.,review
+txt_0212,2025-11-30,I keep seeing the same ad from this store on every app I open.,review
+txt_0213,2025-12-02,"Love this, already ordered a second one for a friend.",ticket
+txt_0214,2025-12-02,Exactly as described on the product page.,ticket
+txt_0215,2025-12-04,"Love this, already ordered a second one for a friend.",ticket
+txt_0216,2025-12-05,"Shipping was faster than I expected, product arrived in great shape.",ticket
+txt_0217,2025-12-05,The color was slightly different from the photos but still nice.,ticket
+txt_0218,2025-12-07,"Not bad, took a bit longer to arrive than the estimate said.",ticket
+txt_0219,2025-12-08,"Great value, will be shopping here again.",review
+txt_0220,2025-12-08,"Great value, will be shopping here again.",ticket
+txt_0221,2025-12-09,"Not bad, took a bit longer to arrive than the estimate said.",ticket
+txt_0222,2025-12-10,"Shipping was faster than I expected, product arrived in great shape.",review
+txt_0223,2025-12-10,"Love this, already ordered a second one for a friend.",ticket
+txt_0224,2025-12-11,Packaging could be better but the item itself is fine.,review
+txt_0225,2025-12-11,"It's okay, nothing special but does the job.",ticket
+txt_0226,2025-12-11,Packaging could be better but the item itself is fine.,review
+txt_0227,2025-12-13,"Love this, already ordered a second one for a friend.",review
+txt_0228,2025-12-13,Packaging could be better but the item itself is fine.,review
+txt_0229,2025-12-13,"It's okay, nothing special but does the job.",review
+txt_0230,2025-12-14,Exactly as described on the product page.,ticket
+txt_0231,2025-12-14,Customer service was helpful when I had a sizing question.,review
+txt_0232,2025-12-15,"Love this, already ordered a second one for a friend.",review
+txt_0233,2025-12-16,"Not bad, took a bit longer to arrive than the estimate said.",ticket
+txt_0234,2025-12-16,"Decent quality for the price, would probably buy again.",review
+txt_0235,2025-12-17,"Great value, will be shopping here again.",review
+txt_0236,2025-12-17,"Shipping was faster than I expected, product arrived in great shape.",review
+txt_0237,2025-12-17,Exactly as described on the product page.,review
+txt_0238,2025-12-19,Customer service was helpful when I had a sizing question.,review
+txt_0239,2025-12-20,Packaging could be better but the item itself is fine.,review
+txt_0240,2025-12-20,Customer service was helpful when I had a sizing question.,ticket
+txt_0241,2025-12-21,"Decent quality for the price, would probably buy again.",ticket
+txt_0242,2025-12-21,The color was slightly different from the photos but still nice.,review
+txt_0243,2025-12-21,Customer service was helpful when I had a sizing question.,review
+txt_0244,2025-12-22,The color was slightly different from the photos but still nice.,review
+txt_0245,2025-12-23,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0246,2025-12-24,"Shipping was faster than I expected, product arrived in great shape.",review
+txt_0247,2025-12-24,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0248,2025-12-24,"Noticed more promo codes floating around recently, used one.",review
+txt_0249,2025-12-24,"Prices seem to have small discounts stacking lately, nice for my wallet.",review
+txt_0250,2025-12-24,"Prices seem to have small discounts stacking lately, nice for my wallet.",review
+txt_0251,2025-12-25,The color was slightly different from the photos but still nice.,ticket
+txt_0252,2025-12-25,"Decent quality for the price, would probably buy again.",review
+txt_0253,2025-12-25,The color was slightly different from the photos but still nice.,review
+txt_0254,2025-12-25,Only bought one item instead of my usual bigger order.,review
+txt_0255,2025-12-26,"Prices seem to have small discounts stacking lately, nice for my wallet.",ticket
+txt_0256,2025-12-26,"Used a coupon code, ended up paying less than usual.",review
+txt_0257,2025-12-27,"It's okay, nothing special but does the job.",review
+txt_0258,2025-12-27,Packaging could be better but the item itself is fine.,ticket
+txt_0259,2025-12-27,"Love this, already ordered a second one for a friend.",ticket
+txt_0260,2025-12-27,"Noticed more promo codes floating around recently, used one.",ticket
+txt_0261,2025-12-28,The color was slightly different from the photos but still nice.,review
+txt_0262,2025-12-28,"Not bad, took a bit longer to arrive than the estimate said.",ticket
+txt_0263,2025-12-28,Exactly as described on the product page.,review
+txt_0264,2025-12-28,"Used a coupon code, ended up paying less than usual.",ticket
+txt_0265,2025-12-29,The color was slightly different from the photos but still nice.,review
+txt_0266,2025-12-29,"Love this, already ordered a second one for a friend.",review
+txt_0267,2025-12-29,"Used a coupon code, ended up paying less than usual.",ticket
+txt_0268,2025-12-29,"Prices seem to have small discounts stacking lately, nice for my wallet.",review
+txt_0269,2025-12-30,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0270,2025-12-30,Only bought one item instead of my usual bigger order.,review
+txt_0271,2025-12-30,"Skipped the add-ons this time, just got the basic item.",review
+txt_0272,2025-12-31,"Noticed more promo codes floating around recently, used one.",ticket
+txt_0273,2026-01-01,"Great value, will be shopping here again.",ticket
+txt_0274,2026-01-01,Customer service was helpful when I had a sizing question.,ticket
+txt_0275,2026-01-01,"Prices seem to have small discounts stacking lately, nice for my wallet.",review
+txt_0276,2026-01-01,"Noticed more promo codes floating around recently, used one.",review
+txt_0277,2026-01-01,"Noticed more promo codes floating around recently, used one.",review
+txt_0278,2026-01-02,"Love this, already ordered a second one for a friend.",review
+txt_0279,2026-01-02,Went with the smaller/cheaper bundle this time instead of the full set.,ticket
+txt_0280,2026-01-02,Only bought one item instead of my usual bigger order.,review
+txt_0281,2026-01-02,"Noticed more promo codes floating around recently, used one.",ticket
+txt_0282,2026-01-03,"Great value, will be shopping here again.",review
+txt_0283,2026-01-03,Exactly as described on the product page.,review
+txt_0284,2026-01-03,Exactly as described on the product page.,review
+txt_0285,2026-01-03,"Prices seem to have small discounts stacking lately, nice for my wallet.",review
+txt_0286,2026-01-03,Only bought one item instead of my usual bigger order.,review
+txt_0287,2026-01-03,Only bought one item instead of my usual bigger order.,review
+txt_0288,2026-01-04,"Great value, will be shopping here again.",ticket
+txt_0289,2026-01-04,Packaging could be better but the item itself is fine.,review
+txt_0290,2026-01-04,Customer service was helpful when I had a sizing question.,review
+txt_0291,2026-01-04,"Noticed more promo codes floating around recently, used one.",review
+txt_0292,2026-01-05,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0293,2026-01-05,Only bought one item instead of my usual bigger order.,review
+txt_0294,2026-01-06,"Skipped the add-ons this time, just got the basic item.",review
+txt_0295,2026-01-06,Went with the smaller/cheaper bundle this time instead of the full set.,review
+txt_0296,2026-01-06,Only bought one item instead of my usual bigger order.,review
+txt_0297,2026-01-07,Packaging could be better but the item itself is fine.,review
+txt_0298,2026-01-07,"It's okay, nothing special but does the job.",ticket
+txt_0299,2026-01-07,"Decent quality for the price, would probably buy again.",ticket
+txt_0300,2026-01-07,"Skipped the add-ons this time, just got the basic item.",ticket
+txt_0301,2026-01-08,Packaging could be better but the item itself is fine.,ticket
+txt_0302,2026-01-08,Only bought one item instead of my usual bigger order.,review
+txt_0303,2026-01-09,"Prices seem to have small discounts stacking lately, nice for my wallet.",review
+txt_0304,2026-01-09,"Used a coupon code, ended up paying less than usual.",review
+txt_0305,2026-01-10,The color was slightly different from the photos but still nice.,review
+txt_0306,2026-01-10,"Used a coupon code, ended up paying less than usual.",ticket
+txt_0307,2026-01-10,Went with the smaller/cheaper bundle this time instead of the full set.,review
+txt_0308,2026-01-11,"Love this, already ordered a second one for a friend.",ticket
+txt_0309,2026-01-11,"It's okay, nothing special but does the job.",review
+txt_0310,2026-01-11,Only bought one item instead of my usual bigger order.,review
+txt_0311,2026-01-11,"Skipped the add-ons this time, just got the basic item.",review
+txt_0312,2026-01-12,Customer service was helpful when I had a sizing question.,review
+txt_0313,2026-01-12,"Noticed more promo codes floating around recently, used one.",review
+txt_0314,2026-01-12,"Used a coupon code, ended up paying less than usual.",review
+txt_0315,2026-01-13,"Decent quality for the price, would probably buy again.",review
+txt_0316,2026-01-13,Packaging could be better but the item itself is fine.,ticket
+txt_0317,2026-01-14,The color was slightly different from the photos but still nice.,review
+txt_0318,2026-01-14,"It's okay, nothing special but does the job.",review
+txt_0319,2026-01-15,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0320,2026-01-16,"It's okay, nothing special but does the job.",review
+txt_0321,2026-01-16,"Decent quality for the price, would probably buy again.",review
+txt_0322,2026-01-16,Customer service was helpful when I had a sizing question.,ticket
+txt_0323,2026-01-18,Customer service was helpful when I had a sizing question.,review
+txt_0324,2026-01-18,Packaging could be better but the item itself is fine.,review
+txt_0325,2026-01-21,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0326,2026-01-22,"Decent quality for the price, would probably buy again.",review
+txt_0327,2026-01-22,"It's okay, nothing special but does the job.",ticket
+txt_0328,2026-01-23,"Great value, will be shopping here again.",ticket
+txt_0329,2026-01-24,"Decent quality for the price, would probably buy again.",review
+txt_0330,2026-01-24,The color was slightly different from the photos but still nice.,ticket
+txt_0331,2026-01-25,Exactly as described on the product page.,review
+txt_0332,2026-01-25,The color was slightly different from the photos but still nice.,review
+txt_0333,2026-01-25,"Not bad, took a bit longer to arrive than the estimate said.",review
+txt_0334,2026-01-26,The color was slightly different from the photos but still nice.,review
+txt_0335,2026-01-26,The color was slightly different from the photos but still nice.,review
+txt_0336,2026-01-26,"Shipping was faster than I expected, product arrived in great shape.",review
+txt_0337,2026-01-27,"Great value, will be shopping here again.",review
+txt_0338,2026-01-27,"It's okay, nothing special but does the job.",review
