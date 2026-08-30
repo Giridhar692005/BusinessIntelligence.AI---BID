@@ -498,7 +498,7 @@ Response:
 }
 ```
 
-#### Detect All KPIs
+#### Detect All KPIs (Z - Score)
 ```http
 POST /detect-all?window=14&threshold=2.5
 Content-Type: multipart/form-data
