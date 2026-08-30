@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { API_URL } from "../api";
 
-export default function PlotWindowClean({ file, selectedKpi = "revenue", onKpiSelect }) {
+export default function PlotWindowClean({
+  file,
+  selectedKpi,
+  availableKpis = [],
+  onKpiSelect
+}) {
   const [data, setData] = useState([]);
   const [mode, setMode] = useState("regular");
   const [windowSize, setWindowSize] = useState(14);
@@ -32,7 +37,22 @@ export default function PlotWindowClean({ file, selectedKpi = "revenue", onKpiSe
   return <div className="analysis-panel plot-panel">
     <div className="panel-intro"><div><span className="eyebrow">VISUAL ANALYSIS</span><h2>KPI plot</h2><p>Detected anomalies are highlighted on the selected KPI.</p></div></div>
     <div className="plot-toolbar">
-      <label>KPI<select value={selectedKpi} onChange={(event) => onKpiSelect(event.target.value)}><option value="revenue">Revenue</option><option value="conversion_rate">Conversion rate</option><option value="aov">AOV</option><option value="cac">CAC</option></select></label>
+      <label>
+  KPI
+  <select
+    value={selectedKpi}
+    onChange={(event) => onKpiSelect(event.target.value)}
+    disabled={!availableKpis.length}
+  >
+    {availableKpis.map((kpi) => (
+      <option key={kpi} value={kpi}>
+        {kpi
+          .replaceAll("_", " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase())}
+      </option>
+    ))}
+  </select>
+</label>
       <label>Rolling window<input type="number" min="1" value={windowSize} onChange={(event) => setWindowSize(event.target.value)} /></label>
       <label>Z-score threshold<input type="number" step="0.1" value={threshold} onChange={(event) => setThreshold(event.target.value)} /></label>
       {mode === "strong" && <label>Interval width<input type="number" min="0.5" max="0.99" step="0.01" value={intervalWidth} onChange={(event) => setIntervalWidth(event.target.value)} /></label>}
