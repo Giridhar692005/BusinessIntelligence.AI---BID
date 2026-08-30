@@ -33,7 +33,7 @@ BID is an intelligent business analytics platform that:
 - Generates AI-driven business narratives (persona-based insights)
 - Retrieves supporting evidence from customer reviews/tickets
 - Creates professional PDF reports with actionable recommendations
-- Learns from analyst feedback to improve recommendations over time (with 3000+ feedbacks)
+- Learns from analyst feedback to improve recommendations over time when sufficient historical feedback is available
 
 ---
 
@@ -49,7 +49,10 @@ BID is an intelligent business analytics platform that:
 - **Feedback Loop**: Learn from analyst decisions to improve recommendations over time
 - **Interactive API Docs**: Auto-generated Swagger UI for testing endpoints
 - **Chat Interface**: Conversational AI for Q&A about anomalies
-- **ML-Based Action Ranking (v5)**: Advanced recommendation engine trained on 3000+ analyst feedbacks
+- **ML-Based Action Ranking (v5)**: scikit-learn recommendation ranking with a safe fallback when feedback history is insufficient
+- **Dynamic KPI Selection**: Analysis windows use the KPI fields actually present in the uploaded dataset
+- **Product-Level Revenue Drivers**: PostgreSQL-backed product contribution analysis for revenue investigations
+- **PDF Chat**: Attach a PDF directly in the chat drawer and ask questions about the document with Gemini
 
 ---
 
@@ -61,7 +64,7 @@ BID is an intelligent business analytics platform that:
 - **Report Generation**: ReportLab, Matplotlib, Pandas
 - **Anomaly Detection**: SciPy (Z-score), Prophet (time-series forecasting)
 - **ML Training**: scikit-learn, joblib (for v5 model)
-- **LLM Integration**: Google Gemini for narratives and recommendations
+- **LLM Integration**: Groq for conversational/tool-calling flows and Google Gemini for PDF document Q&A
 - **Environment Management**: python-dotenv
 - **API Server**: Uvicorn (ASGI)
 - **Data Processing**: Pandas, NumPy
@@ -85,6 +88,7 @@ BusinessIntelligence.AI---BID/
 ├── anomaly_detector.py              # Anomaly detection (Z-score)
 ├── prophet_detector.py              # Anomaly detection (Prophet time-series)
 ├── root_cause.py                    # Root cause analysis engine
+├── product_drivers.py               # Product-level revenue contribution and profit snapshot
 ├── action_engine.py                 # Business action recommendations
 ├── recommendation_engine_v5.py      # ML-based action ranking (requires 3000+ feedbacks)
 ├── llm_narrative.py                 # AI narrative generation
@@ -617,77 +621,52 @@ Response:
 
 #### Generate Business Narratives
 ```http
-POST /narrative?date=2024-01-15&window=14&threshold=2.5&persona=marketing_manager&use_reviews=true
+POST /narrative?kpi=revenue&date=2024-01-15&window=14&threshold=2.5
 Content-Type: multipart/form-data
 
 Parameters:
-  file: CSV with KPI data
-  date: Anomaly date (YYYY-MM-DD)
-  window: Rolling window (default: 14)
-  threshold: Z-score threshold (default: 2.5)
-  persona: Optional - "marketing_manager" or "sales_ops_manager" (if omitted, returns ALL personas)
-  use_reviews: Whether to include customer review evidence via RAG (default: true)
-
-Response:
-{
-  "report": {...},  # Full root cause analysis
-  "evidence": [
-    {
-      "date": "2024-01-15",
-      "text": "Customer complaint about slow website performance",
-      "relevance": 0.92
-    },
-    ...
-  ],
-  "narratives": {
-    "marketing_manager": {
-      "narrative": "Revenue anomaly on Jan 15 was driven by a 25% spike in ad spend... Customer feedback indicates website performance issues may have limited conversion impact...",
-      "tone": "analytical",
-      "business_factors": ["increased_marketing_spend", "website_performance", "customer_experience"]
-    },
-    "sales_ops_manager": {
-      "narrative": "From operations perspective, the revenue spike correlates with increased traffic but order processing was delayed...",
-      "tone": "operational",
-      "business_factors": ["order_processing_delay", "inventory_levels", "team_capacity"]
-    }
-  },
-  "decision_engine": {
-    "primary_driver": "ad_spend",
-    "recommendations": [...]
-  }
-}
+  file: KPI CSV
+  kpi: KPI to analyze
+  date: anomaly date (YYYY-MM-DD)
+  window: rolling analysis window
+  threshold: statistical threshold
+  persona: optional persona identifier
 ```
+
+The narrative endpoint runs the deterministic root-cause pipeline first and then turns the computed analysis into human-readable business explanations. The quantitative result comes from Python/database calculations; the LLM is used for explanation.
 
 ---
 
 ### 7. PDF Report Generation
 
 #### Generate Complete PDF Report
+The PDF report is generated from the **already-computed Root Cause analysis result** returned to the frontend.
+
+The frontend sends the analysis result as `analysis_json` to `/report`, so downloading a report does not independently regenerate a second narrative.
+
 ```http
-POST /report?kpi=revenue&date=2024-01-15&window=14&threshold=2.5&use_reviews=true
+POST /report?kpi=revenue&date=2024-01-15&window=14&threshold=2.5
 Content-Type: multipart/form-data
 
-Parameters:
-  file: CSV with KPI data
-  kpi: Primary KPI to report on
-  date: Analysis date (YYYY-MM-DD)
-  window: Rolling window (default: 14)
-  threshold: Z-score threshold (default: 2.5)
-  use_reviews: Include customer evidence (default: true)
-
-Response: PDF file (attachment)
+Form fields:
+  file: KPI CSV
+  analysis_json: JSON returned by the Root Cause/Narrative analysis
 ```
 
 **PDF Report Includes:**
-1. **Title Page** — Report metadata and date
-2. **Executive Summary** — Key findings and confidence level
-3. **Root Cause Analysis** — Driver table with current values, baselines, and % changes
-4. **Confidence Metrics** — Reliability score and analysis rationale
-5. **Affected KPIs** — Multi-KPI overlap analysis
-6. **KPI Trend Graph** — Visual representation with anomalies marked
-7. **AI Narratives** — Persona-based interpretations (Marketing Manager, Sales Ops)
-8. **Supporting Evidence** — Relevant customer reviews and tickets
-9. **Recommended Actions** — Ranked business recommendations with impact scores
+1. Executive summary
+2. KPI snapshot
+3. Root cause / driver analysis
+4. Product-level revenue drivers when available
+5. Net-profit/loss snapshot when available
+6. Confidence metrics
+7. Affected KPIs
+8. Anomaly visualization
+9. Existing AI narratives supplied by the analysis
+10. Supporting evidence
+11. Ranked recommendations
+
+The report renderer only formats the supplied analysis; it is not a second source of business calculations.
 
 ---
 
@@ -798,33 +777,49 @@ Response:
 
 ### 10. Chat Interface
 
-#### Chat with AI about Anomalies
+#### Chat with BID
 ```http
 POST /chat
 Content-Type: multipart/form-data
-
-Parameters:
-  req: JSON string with chat request
-  file: CSV with KPI data
-  pdf: (Optional) PDF report file
-
-Body (req parameter as JSON):
-{
-  "message": "Why did revenue spike on January 15?",
-  "history": [
-    {"role": "user", "content": "..."},
-    {"role": "assistant", "content": "..."}
-  ]
-}
-
-Response:
-{
-  "response": "Based on the data analysis, the revenue spike on January 15 was primarily driven by...",
-  "sources": ["ad_spend_increase", "customer_reviews"]
-}
 ```
 
+The conversational assistant can use deterministic tools for:
+- anomaly/root-cause analysis
+- ranked recommendations
+- supporting customer evidence
+- historical feedback
+
+For business-data questions, Python and PostgreSQL remain the quantitative source of truth.
+
+#### PDF Q&A
+The React chat drawer includes a **+** attachment button. A user can attach a PDF and ask questions about that document.
+
+The backend uploads the PDF to Google Gemini and uses the configured Gemini model for document understanding.
+
+Required environment variables:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-3.6-flash
+```
+
+The Gemini API key stays on the backend and is never placed in the frontend.
+
 ---
+
+
+### Dynamic KPI Support
+
+The frontend and analysis windows are designed to work from the KPI columns actually present in the uploaded CSV. A business does not need to provide every KPI used by the demo dataset.
+
+For example, a dataset may contain:
+
+```text
+date,revenue,orders
+```
+
+without `cac`, `aov`, or `conversion_rate`. The UI should expose only the available analyzable KPIs.
+
 
 ## 📖 Usage Guide
 
@@ -870,10 +865,16 @@ curl -X POST "http://localhost:8000/narrative?date=2024-01-15&persona=marketing_
 ```
 
 #### Step 6: Generate PDF Report
-```bash
-curl -X POST "http://localhost:8000/report?kpi=revenue&date=2024-01-15" \
-  -F "file=@kpi_data.csv" \
-  -o revenue_report_2024-01-15.pdf
+The web application sends the completed Root Cause/Narrative response as `analysis_json` so the PDF uses the same analysis already shown to the user.
+
+```text
+Root Cause/Narrative result
+        ↓
+frontend Download PDF
+        ↓
+POST /report with analysis_json
+        ↓
+PDF renderer
 ```
 
 #### Step 7: Submit Feedback (for Learning)
@@ -894,8 +895,8 @@ curl -X POST "http://localhost:8000/feedback" \
 
 ## 🤖 Advanced: Model Training with recommendation_engine_v5.py
 
-### ⚠️ IMPORTANT: Data Requirements
-**Only use recommendation_engine_v5.py if you have 3000+ analyst feedbacks** in the `business_decisions` table. With smaller datasets, the ML model will not train properly.
+### ⚠️ IMPORTANT: Feedback Requirements
+The v5 recommendation model benefits from a sufficiently large and representative feedback history. A small or new installation should not fail just because historical feedback is missing; the system should use its fallback/default recommendation scoring until enough real feedback has been collected.
 
 ### Step 1: Seed Sample Feedback Data (For Testing Only)
 
@@ -1135,6 +1136,19 @@ python seedfeedback.py
 
 ---
 
+### `product_drivers.py` — Product-Level Analysis
+
+**Purpose**: Explain revenue movement using product-level contribution analysis.
+
+**Features**:
+- Compares each product with its trailing baseline
+- Calculates revenue change and contribution percentage
+- Provides volume and price effects
+- Flags sparse product history
+- Computes an on-demand net-profit/loss snapshot from order and production-cost data
+
+---
+
 ### `action_engine.py` — Business Action Generation
 
 **Purpose**: Generate candidate actions based on root cause
@@ -1353,6 +1367,6 @@ For issues, questions, or suggestions:
 
 ---
 
-**Last Updated**: August 2026  
+**Last Updated**: August 2026
 **Author**: Giridhar692005  
 **Repository**: [GitHub](https://github.com/Giridhar692005/BusinessIntelligence.AI---BID)
