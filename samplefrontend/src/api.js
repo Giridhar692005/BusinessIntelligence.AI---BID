@@ -61,28 +61,22 @@ export async function getRootCause(file, date, window = 14, threshold = 2.5) {
   if (!response.ok) throw new Error(await parseError(response));
   return response.json();
 }
-export async function downloadReport(file, kpi, date, windowSize = 14, threshold = 2.5) {
+export async function downloadReport(file, kpi, date, window = 14, threshold = 2.5, analysis) {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("analysis_json", JSON.stringify(analysis));
 
   const response = await fetch(
-    `${API_URL}/report?kpi=${encodeURIComponent(kpi)}&date=${encodeURIComponent(date)}&window=${windowSize}&threshold=${threshold}`,
-    { method: "POST", body: formData }
+    `${API_URL}/report?kpi=${encodeURIComponent(kpi)}&date=${encodeURIComponent(date)}&window=${window}&threshold=${threshold}`,
+    {
+      method: "POST",
+      body: formData,
+    }
   );
 
   if (!response.ok) throw new Error(await parseError(response));
 
-  const blob = await response.blob();
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-
-  a.href = url;
-  a.download = `${kpi}_report_${date}.pdf`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-
-  window.URL.revokeObjectURL(url);
+  return response.blob();
 }
 // ---------------------------------------------------------------
 // Build-from-raw-data pipeline: upload the two source CSVs, ask the

@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { API_URL, downloadReport } from "../api";
-
+import { API_URL, getRootCause, downloadReport } from "../api";
 export default function RootCauseWindow({ file, selectedKpi, availableKpis = [], onKpiSelect }) {
 
   const [date, setDate] = useState("");
@@ -112,19 +111,33 @@ export default function RootCauseWindow({ file, selectedKpi, availableKpis = [],
     }
   }
   async function handleDownloadReport() {
-  if (!file || !selectedKpi || !date) {
-    setError("Select a KPI and anomaly date first.");
+  if (!result) {
+    setError("Run Root Cause Analysis first.");
     return;
   }
 
   try {
-    setError("");
-    await downloadReport(file, selectedKpi, date, windowSize, threshold);
-  } catch (err) {
-    setError(err.message || "Failed to generate PDF report.");
-  }
-  }
+    const blob = await downloadReport(
+      file,
+      selectedKpi,
+      date,
+      Number(windowSize),
+      Number(threshold),
+      result
+    );
 
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${selectedKpi}_report_${date}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    setError(`Failed to download report: ${err.message}`);
+  }
+}
   // -----------------------------------------
   // EXTRACT NARRATIVE
   // -----------------------------------------

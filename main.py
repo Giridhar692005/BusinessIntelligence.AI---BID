@@ -401,44 +401,139 @@ async def chat_endpoint(
         REVIEWS_DF,
     )
 
-@app.post("/plot")
-async def plot(
-    file: UploadFile = File(...),
-    kpi: str = Query(..., description="Column name to plot, e.g. 'revenue'"),
-    window: int = Query(14),
-    threshold: float = Query(2.5),
+
+
+def _build_anomaly_graph(
+    df: pd.DataFrame,
+    kpi: str,
+    date: str | None = None,
+    window: int = 14,
+    threshold: float = 2.5,
+    interval_width: float = 0.90,
 ):
-    """
-    Upload a CSV, get back an actual PNG image of the KPI plot with
-    anomalies marked as black X's. Returns the image directly, so your
-    frontend can show it with a simple <img src="..."> tag pointing at
-    this endpoint (or by displaying the returned image bytes).
-    """
-    contents = await file.read()
-    df = _load_csv(contents)
+    """Build the graph from the Prophet/ensemble detector.
 
-    if kpi not in df.columns:
-        return JSONResponse(status_code=400, content={"error": f"Column '{kpi}' not found in uploaded data"})
+    This deliberately does NOT call the standalone z-score detector for
+    anomaly flags. The ensemble result is the source of truth. If the
+    detector exposes Prophet forecast/bounds columns, those are shown too.
+    """
+    if not PROPHET_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="Prophet is not available. Install/configure Prophet before requesting this plot.",
+        )
 
-    result = detect_anomalies_zscore(df, kpi, window=window, threshold=threshold)
+    result = detect_anomalies_ensemble(
+        df,
+        kpi,
+        detect_anomalies_zscore,
+        window=window,
+        threshold=threshold,
+        interval_width=interval_width,
+    ).copy()
+
+    if "date" not in result.columns or "value" not in result.columns:
+        raise HTTPException(
+            status_code=500,
+            detail="Prophet detector did not return the expected date/value columns.",
+        )
+
+    result["date"] = pd.to_datetime(result["date"])
 
     fig, ax = plt.subplots(figsize=(12, 5))
-    ax.plot(result["date"], result["value"], color="steelblue", linewidth=1.5, label=kpi)
+    ax.plot(result["date"], result["value"], linewidth=1.5, label=f"{kpi} actual")
 
-    anomalies = result[result["is_anomaly"]]
-    ax.scatter(anomalies["date"], anomalies["value"], color="black", s=80,
-               marker="x", linewidths=2, zorder=5, label="Anomaly")
+    if "is_anomaly_prophet" in result.columns:
+        prophet_mask = result["is_anomaly_prophet"].fillna(False).astype(bool)
+    elif "is_anomaly" in result.columns:
+        prophet_mask = result["is_anomaly"].fillna(False).astype(bool)
+    else:
+        prophet_mask = pd.Series(False, index=result.index)
 
-    ax.set_title(f"{kpi} — Trend with Anomalies Marked")
+    if prophet_mask.any():
+        prophet_anomalies = result[prophet_mask]
+        ax.scatter(
+            prophet_anomalies["date"],
+            prophet_anomalies["value"],
+            s=80,
+            marker="x",
+            linewidths=2,
+            zorder=5,
+            label="Prophet anomaly",
+        )
+
+    forecast_col = next(
+        (c for c in ("yhat", "forecast", "yhat_mean", "predicted", "prediction") if c in result.columns),
+        None,
+    )
+    lower_col = next(
+        (c for c in ("yhat_lower", "lower", "lower_bound", "forecast_lower") if c in result.columns),
+        None,
+    )
+    upper_col = next(
+        (c for c in ("yhat_upper", "upper", "upper_bound", "forecast_upper") if c in result.columns),
+        None,
+    )
+
+    if forecast_col is not None:
+        ax.plot(
+            result["date"],
+            result[forecast_col],
+            linestyle="--",
+            linewidth=1.3,
+            label="Prophet forecast",
+        )
+
+    if lower_col is not None and upper_col is not None:
+        ax.fill_between(
+            result["date"],
+            result[lower_col].astype(float),
+            result[upper_col].astype(float),
+            alpha=0.18,
+            label="Prophet interval",
+        )
+
+    if date:
+        ax.axvline(pd.to_datetime(date), linestyle="--", linewidth=1, label="Selected date")
+
+    ax.set_title(f"{kpi} — Prophet/Ensemble Anomaly Analysis")
     ax.set_xlabel("Date")
     ax.set_ylabel(kpi)
     ax.grid(alpha=0.3)
     ax.legend()
     fig.tight_layout()
 
-    # Save the plot into memory (not to disk) and send it back as an image
+    return fig, result
+
+
+@app.post("/plot")
+async def plot(
+    file: UploadFile = File(...),
+    kpi: str = Query(..., description="Column name to plot, e.g. 'revenue'"),
+    window: int = Query(14),
+    threshold: float = Query(2.5),
+    interval_width: float = Query(0.90, description="Prophet confidence interval width (0-1)"),
+):
+    """Return a PNG plot generated from the Prophet/ensemble analysis."""
+    contents = await file.read()
+    df = _load_csv(contents)
+
+    if kpi not in df.columns:
+        return JSONResponse(
+            status_code=400,
+            content={"error": f"Column '{kpi}' not found in uploaded data"},
+        )
+
+    fig, _ = _build_anomaly_graph(
+        df,
+        kpi,
+        window=window,
+        threshold=threshold,
+        interval_width=interval_width,
+    )
+
     buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=120)
+    fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
     plt.close(fig)
     buf.seek(0)
 
@@ -451,45 +546,46 @@ async def plot_base64(
     kpi: str = Query(...),
     window: int = Query(14),
     threshold: float = Query(2.5),
+    interval_width: float = Query(0.90, description="Prophet confidence interval width (0-1)"),
 ):
-    """
-    Same as /plot, but returns the image encoded as a base64 string inside JSON
-    instead of raw image bytes. Some frontends (especially React) find this
-    easier to work with than a raw image stream.
-    """
+    """Base64 version of /plot, using Prophet/ensemble analysis."""
     contents = await file.read()
     df = _load_csv(contents)
 
     if kpi not in df.columns:
-        return JSONResponse(status_code=400, content={"error": f"Column '{kpi}' not found in uploaded data"})
+        return JSONResponse(
+            status_code=400,
+            content={"error": f"Column '{kpi}' not found in uploaded data"},
+        )
 
-    result = detect_anomalies_zscore(df, kpi, window=window, threshold=threshold)
-
-    fig, ax = plt.subplots(figsize=(12, 5))
-    ax.plot(result["date"], result["value"], color="steelblue", linewidth=1.5, label=kpi)
-
-    anomalies = result[result["is_anomaly"]]
-    ax.scatter(anomalies["date"], anomalies["value"], color="black", s=80,
-               marker="x", linewidths=2, zorder=5, label="Anomaly")
-
-    ax.set_title(f"{kpi} — Trend with Anomalies Marked")
-    ax.set_xlabel("Date")
-    ax.set_ylabel(kpi)
-    ax.grid(alpha=0.3)
-    ax.legend()
-    fig.tight_layout()
+    fig, result = _build_anomaly_graph(
+        df,
+        kpi,
+        window=window,
+        threshold=threshold,
+        interval_width=interval_width,
+    )
 
     buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=120)
+    fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
     plt.close(fig)
     buf.seek(0)
 
     encoded = base64.b64encode(buf.read()).decode("utf-8")
 
+    if "is_anomaly_prophet" in result.columns:
+        anomaly_count = int(result["is_anomaly_prophet"].fillna(False).astype(bool).sum())
+    else:
+        anomaly_count = int(result["is_anomaly"].fillna(False).astype(bool).sum()) if "is_anomaly" in result.columns else 0
+
     return {
         "kpi": kpi,
-        "anomaly_count": int(result["is_anomaly"].sum()),
-        "image_base64": f"data:image/png;base64,{encoded}"
+        "prophet_available": PROPHET_AVAILABLE,
+        "window": window,
+        "threshold": threshold,
+        "interval_width": interval_width,
+        "anomaly_count": anomaly_count,
+        "image_base64": f"data:image/png;base64,{encoded}",
     }
 
 
@@ -913,8 +1009,21 @@ async def generate_report(
     date: str = Query(...),
     window: int = Query(14),
     threshold: float = Query(2.5),
-    use_reviews: bool = Query(True),
+    interval_width: float = Query(0.90),
+    analysis_json: str = Form(
+        ...,
+        description=(
+            "JSON returned by the Root Cause/Narrative analysis. "
+            "The PDF renders this exact result and does not call the LLM again."
+        ),
+    ),
 ):
+    """
+    Build the PDF from the Root Cause result already shown in the UI.
+
+    The PDF endpoint is a renderer only: it deliberately does not call
+    generate_narrative(), generate_all_narratives(), or generate_llm_actions().
+    """
     contents = await file.read()
     df = _load_csv(contents)
 
@@ -924,128 +1033,47 @@ async def generate_report(
             content={"error": f"Column '{kpi}' not found in uploaded data"},
         )
 
-    report = full_root_cause_report(
-        df,
-        date,
-        kpi_columns=[c for c in DEFAULT_KPI_COLUMNS if c in df.columns],
-        window=window,
-        threshold=threshold,
-    )
-
-    evidence = None
-
-    if use_reviews:
-        evidence = get_supporting_evidence(
-            report,
-            REVIEWS_DF,
-            date_window_days=3,
-            top_k=5,
+    try:
+        analysis_payload = json.loads(analysis_json)
+    except (TypeError, json.JSONDecodeError) as exc:
+        return JSONResponse(
+            status_code=400,
+            content={"error": f"Invalid analysis_json: {exc}"},
         )
 
-    narratives_result = generate_all_narratives(
-        report,
-        evidence=evidence,
-    )
+    if not isinstance(analysis_payload, dict):
+        return JSONResponse(
+            status_code=400,
+            content={"error": "analysis_json must contain the Root Cause result object."},
+        )
 
-    narrative_text = ""
+    report = analysis_payload.get("report") or analysis_payload.get("root_cause") or {}
+    evidence = analysis_payload.get("evidence") or {}
+    narratives_result = analysis_payload.get("narratives") or {}
+    decision_engine = analysis_payload.get("decision_engine") or {}
+    recommendations = decision_engine.get("recommendations") or analysis_payload.get("recommendations") or []
 
-    for result in narratives_result.values():
-        if isinstance(result, dict) and result.get("narrative"):
-            narrative_text = result["narrative"]
-            break
+    if not isinstance(report, dict):
+        return JSONResponse(status_code=400, content={"error": "Root Cause report is missing or invalid."})
+    if not isinstance(narratives_result, dict):
+        return JSONResponse(status_code=400, content={"error": "Root Cause narratives are missing or invalid."})
 
-    llm_actions = generate_llm_actions(
-        report,
-        evidence=evidence,
-        narrative=narrative_text,
-    )
-
-    drivers = report.get("drivers", {})
-
-    business_context = {
-        "primary_driver_pct_change": drivers.get("primary_driver_pct_change"),
-        "confidence_score": report.get("confidence", {}).get("score"),
-    }
-
-    for driver in drivers.get("drivers_ranked", []):
-        factor = driver.get("factor")
-        change = driver.get("pct_change")
-
-        if factor:
-            business_context[f"{factor}_change"] = change
-
-    from recommendation_engine_v5 import rank_actions as rank_v5_actions
-
-    recommendations = rank_v5_actions(
-        kpi=kpi,
-        context=business_context,
-        primary_driver=drivers.get("primary_driver"),
-        llm_actions=llm_actions,
-    )[:3]
-
-    # -----------------------------------------------------
-    # Create graph
-    # -----------------------------------------------------
-
-    result = detect_anomalies_zscore(
+    # Create the graph from Prophet/ensemble analysis, not standalone z-score.
+    fig, _ = _build_anomaly_graph(
         df,
         kpi,
+        date=date,
         window=window,
         threshold=threshold,
+        interval_width=interval_width,
     )
-
-    fig, ax = plt.subplots(figsize=(12, 5))
-
-    ax.plot(
-        result["date"],
-        result["value"],
-        linewidth=1.5,
-        label=kpi,
-    )
-
-    anomalies = result[result["is_anomaly"]]
-
-    ax.scatter(
-        anomalies["date"],
-        anomalies["value"],
-        s=80,
-        marker="x",
-        linewidths=2,
-        zorder=5,
-        label="Anomaly",
-    )
-
-    ax.axvline(
-        pd.to_datetime(date),
-        linestyle="--",
-        linewidth=1,
-        label="Selected date",
-    )
-
-    ax.set_title(
-        f"{kpi} - Trend with Anomalies"
-    )
-
-    ax.set_xlabel("Date")
-    ax.set_ylabel(kpi)
-    ax.grid(alpha=0.3)
-    ax.legend()
-    fig.tight_layout()
 
     graph_buffer = BytesIO()
-    fig.savefig(
-        graph_buffer,
-        format="png",
-        dpi=150,
-        bbox_inches="tight",
-    )
+    fig.savefig(graph_buffer, format="png", dpi=150, bbox_inches="tight")
     plt.close(fig)
     graph_buffer.seek(0)
 
-    # -----------------------------------------------------
-    # Create PDF
-    # -----------------------------------------------------
-
+    # The exact narratives from the Root Cause screen are passed through.
     pdf_buffer = create_report_pdf(
         kpi=kpi,
         date=date,
@@ -1061,10 +1089,9 @@ async def generate_report(
     return StreamingResponse(
         pdf_buffer,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"'
-        },
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
 
 @app.get("/actions")
 async def get_actions(
