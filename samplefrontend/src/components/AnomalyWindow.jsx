@@ -3,7 +3,12 @@ import { detectAnomalies } from "../api";
 
 const KPIS = ["revenue", "conversion_rate", "aov", "cac"];
 
-export default function AnomalyWindow({ file, selectedKpi = "revenue", onKpiSelect }) {
+export default function AnomalyWindow({
+  file,
+  selectedKpi,
+  availableKpis = [],
+  onKpiSelect
+}) {
   const [window, setWindow] = useState(14);
   const [threshold, setThreshold] = useState(2.5);
   const [result, setResult] = useState(null);
@@ -32,7 +37,13 @@ export default function AnomalyWindow({ file, selectedKpi = "revenue", onKpiSele
 
       <div className="control-grid">
         <label>KPI<select value={selectedKpi} onChange={e => onKpiSelect(e.target.value)}>
-          {KPIS.map(x => <option key={x}>{x}</option>)}
+          {availableKpis.map((kpi) => (
+             <option key={kpi} value={kpi}>
+          {kpi
+              .replaceAll("_", " ")
+                .replace(/\b\w/g, (c) => c.toUpperCase())}
+           </option>
+           ))}
         </select></label>
         <label>Rolling window<input type="number" min="1" value={window} onChange={e => setWindow(e.target.value)} /></label>
         <label>Z-score threshold<input type="number" step="0.1" value={threshold} onChange={e => setThreshold(e.target.value)} /></label>
