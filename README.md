@@ -58,7 +58,7 @@ BID is an intelligent business analytics platform that:
 - **Frontend**: React + Vite (ES6+)
 - **Report Generation**: ReportLab, Matplotlib, Pandas
 - **Anomaly Detection**: SciPy (Z-score), Prophet (time-series forecasting)
-- **LLM Integration**: Google Gemini for narratives and recommendations
+- **LLM Integration**: OpenAI GPT and Google Gemini for narratives and recommendations
 - **Environment Management**: python-dotenv
 - **API Server**: Uvicorn (ASGI)
 - **Data Processing**: Pandas, NumPy
@@ -181,7 +181,7 @@ BusinessIntelligence.AI---BID/
    GEMINI_API_KEY=your_gemini_api_key
    
    # API Configuration
-   API_KEY=your_api_key
+   GROQ_API_KEY=your_api_key
    DEBUG=False
    ```
 
