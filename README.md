@@ -866,7 +866,7 @@ DB_PORT=5432
 GEMINI_API_KEY=your_gemini_api_key_here
 
 # API Configuration
-API_KEY=your_api_key_for_external_callers
+GROQ_API_KEY=your_api_key_for_external_callers
 DEBUG=False
 
 # Optional: Logging
