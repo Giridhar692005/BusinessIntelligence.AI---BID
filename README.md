@@ -4,14 +4,21 @@
 
 A hackathon prototype KPI intelligence-to-action engine built for the BusinessIntelligence.ai Round 2 problem statement.
 
-This README has been updated to reflect the current implementation, demo priorities, known limitations, testing steps, and how the system satisfies the contest requirements. Implementation work was intentionally incremental — the core codebase was not modified by this documentation change.
+Repository metadata
+
+- Owner: Giridhar692005
+- Repo: BusinessIntelligence.AI---BID
+- Repo ID: 1342723231
+- Language composition: Python (67.8%), JavaScript (24.5%), CSS (7.6%), HTML (0.1%)
+
+This README has been updated to reflect the current implementation, demo priorities, known limitations, testing steps, and how the system satisfies the contest requirements. Implementation work was done incrementally and aimed to preserve all existing functionality.
 
 ---
 
 ## Quick summary
 
-- Purpose: Detect and prioritise material KPI movements, explain drivers with deterministic analytics, surface persona-aware narratives, and recommend actionable steps while preserving evidence and confidence.
-- This repo is a working prototype (FastAPI backend + React frontend) intended for demo and hackathon evaluation. The LLM is used for narrative synthesis; all quantitative claims come from deterministic code (SQL, pandas, statistics, forecasting, rule engines, ML ranking) and retrieval.
+- Purpose: Detect and prioritise material KPI movements, explain drivers with deterministic analytics, surface persona-aware narratives, and recommend actionable steps while preserving evidence and lineage.
+- This repo is a working prototype (FastAPI backend + React frontend) intended for demo and hackathon evaluation. The LLM is used for narrative synthesis; all quantitative claims come from deterministic analytics, SQL/statistics/ML where appropriate.
 
 ---
 
@@ -44,7 +51,7 @@ Not in scope for this patch:
 
 ## KPI semantic contract (lightweight)
 
-Every KPI in the system should expose the following metadata fields. This file documents the contract used by the demo and serves as the single source-of-truth for metadata. The existing custom KPI structures in code should be adapted to emit/consume the same contract.
+Every KPI in the system should expose the following metadata fields. This file documents the contract used by the demo and serves as the single source-of-truth for metadata. The existing custom KPI implementation should be wired to consume/emit this contract.
 
 Example (JSON-like):
 
@@ -83,7 +90,7 @@ Notes:
 
 ## How the system separates deterministic vs LLM steps
 
-Design principle: quantitative truth always comes from deterministic code. LLMs only perform language synthesis and persona-aware phrasing. The analysis result includes explicit evidence describing which part of the output was produced deterministically and which was created by the LLM.
+Design principle: quantitative truth always comes from deterministic code. LLMs only perform language synthesis and persona-aware phrasing. The analysis result includes explicit evidence describing deterministic inputs and any LLM synthesis used for narration.
 
 Where to inspect this in the code:
 - Deterministic analytics / data: anomaly_detector.py, prophet_detector.py, root_cause.py, product_drivers.py, custom_kpi.py
@@ -123,7 +130,7 @@ access_control = {
   }
 }
 
-The backend should honor check_persona_access(persona, resource_type, resource_name) for sensitive endpoints (root-cause, evidence retrieval, actions). Frontend UI can hide unavailable KPIs but should rely on backend enforcement for security.
+The backend should honor check_persona_access(persona, resource_type, resource_name) for sensitive endpoints (root-cause, evidence retrieval, actions). Frontend UI can hide unavailable KPIs but server-side checks are the enforcement point.
 
 Where to look in code: business_config.py (persona definitions), main.py (use of persona headers in endpoints).
 
@@ -139,7 +146,7 @@ Where to look in code: business_config.py (persona definitions), main.py (use of
   - Open RootCauseWindow in the frontend for the anomaly date to see connected KPI list and drivers
 
 2) Multi-factor KPI movement
-- Trigger: pick a day where multiple drivers change in the synthetic data (ad_spend and visitors). The root_cause pipeline will list primary and secondary drivers with deterministic pct changes and correlations.
+- Trigger: pick a day where multiple drivers change in the synthetic data (ad_spend and visitors). The root_cause pipeline will list primary and secondary drivers with deterministic pct changes and contributions.
 - Inspect fields response.root_cause.drivers_ranked and response.root_cause.confidence.
 
 3) Low-confidence / abstention demo
@@ -159,7 +166,7 @@ Where to look in code: business_config.py (persona definitions), main.py (use of
 
 ## Evidence & lineage visibility
 
-- All results returned by the root-cause and narrative endpoints include an evidence block listing: source name, type, date range, row counts (when available), the deterministic method used, and whether an LLM synthesized the final text. Use the UI Evidence & Lineage panel to review the elements.
+- All results returned by the root-cause and narrative endpoints include an evidence block listing: source name, type, date range, row counts (when available), the deterministic method used, and supporting numerical artifacts.
 - PDF report includes the evidence block from the supplied analysis JSON and does not re-run calculations.
 
 ---
@@ -214,12 +221,21 @@ npm run dev
 
 ## What I changed in README.md (this commit)
 
-- Added a focused "KPI semantic contract" section to formalize metadata fields (STEP 1 priority).
-- Added a "Status snapshot" summarising implemented and partially implemented items mapped to problem statement expectations.
-- Documented deterministic vs LLM responsibilities and where to find them in code.
-- Added explicit demo scenarios and deterministic triggers for low-confidence and sparse-history cases.
-- Described persona/entitlement concept and how to demo role-based access.
-- Clarified telemetry fields and how they appear in analysis responses.
+Files changed in this commit:
+- README.md
+
+What changed:
+- Added repository metadata (owner, repo id, language composition).
+- Clarified and formalized the KPI semantic contract and notes about calculation-only input columns.
+- Expanded demo scenarios and deterministic triggers for low-confidence and sparse-history cases.
+- Clarified persona/entitlement design and server-side enforcement guidance.
+- Emphasised deterministic vs LLM responsibilities and listed where to find relevant modules.
+- Documented telemetry fields and demo run steps.
+
+Which problem-statement requirements these changes address:
+- STEP 1: Formalise the KPI semantic contract (documentation added)
+- STEP 2/3/4/5/6: Clarified demo scenarios for connected KPIs, multi-factor movements, low-confidence, sparse-history and persona demos (documentation and test instructions)
+- STEP 8/9/10: Improved description of evidence/lineage and LLM vs non-LLM separation and telemetry (documentation)
 
 This is a documentation-only change and does not modify code or runtime behavior.
 
@@ -263,7 +279,6 @@ Priority (short list):
 
 ## Contact / Contributing
 
-If you want changes to how the system behaves (beyond docs), open an issue describing the exact change and reference the problem statement sections. For quick collaboration, create a branch and a small PR with code and tests.
+If you want changes to how the system behaves (beyond docs), open an issue describing the exact change and reference the problem statement sections. For quick collaboration, create a branch and a PR.
 
 ---
-
