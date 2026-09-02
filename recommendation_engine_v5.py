@@ -83,22 +83,46 @@ def get_candidate_actions(
     # Later this relationship comes from business metadata.
     # -----------------------------------------------------
 
-    if target_kpi == "revenue":
+        related_groups_map = {
+    "revenue": [
+        "orders",
+        "conversion_rate",
+        "aov",
+        "cac",
+        "ad_spend",
+        "visitors"
+    ],
+    "orders": [
+        "visitors",
+        "conversion_rate",
+        "revenue",
+        "ad_spend"
+    ],
+    "conversion_rate": [
+        "orders",
+        "visitors",
+        "revenue",
+        "aov"
+    ],
+    "aov": [
+        "revenue",
+        "orders",
+        "conversion_rate"
+    ],
+    "cac": [
+        "ad_spend",
+        "visitors",
+        "orders",
+        "conversion_rate"
+    ],
+    "visitors": [
+        "ad_spend",
+        "orders",
+        "conversion_rate"
+    ]
+        }
 
-        related_groups = [
-
-            "orders",
-
-            "conversion_rate",
-
-            "aov",
-
-            "cac",
-
-            "ad_spend",
-
-            "visitors"
-        ]
+        related_groups = related_groups_map.get(target_kpi, [])
 
 
         for group in related_groups:
@@ -152,7 +176,11 @@ def get_candidate_actions(
     # -----------------------------------------------------
     # Merge LLM actions
     # -----------------------------------------------------
-
+    print("TARGET KPI:", target_kpi)
+    print("PRIMARY DRIVER:", primary_driver)
+    print("RULE ACTION COUNT:", len(rule_based_actions))
+    print("RULE ACTIONS:", [a.get("action") for a in rule_based_actions])
+    print("LLM ACTION COUNT:", len(llm_actions or []))
     return merge_llm_actions(
 
         rule_based_actions,
@@ -189,9 +217,6 @@ def rank_actions(
 
         llm_actions=llm_actions
     )
-    print("TOTAL CANDIDATE ACTIONS:", len(actions))
-    print("LLM ACTIONS:", llm_actions)
-    print("CANDIDATE SOURCES:", [a.get("source") for a in actions])
 
     if not actions:
 

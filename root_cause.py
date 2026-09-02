@@ -564,14 +564,8 @@ def full_root_cause_report(
     # Available history
     # -----------------------------------------------------
 
-    available_history_days = len(
-        df[
-            df["date"]
-            < pd.to_datetime(anomaly_date)
-        ]
-    )
-
-
+    available_history_days = len(df[df["date"]< pd.to_datetime(anomaly_date)])
+    history_sparse = available_history_days < window
     # -----------------------------------------------------
     # Drivers
     # -----------------------------------------------------
@@ -625,7 +619,15 @@ def full_root_cause_report(
         available_history_days=
             available_history_days
     )
-
+    if history_sparse:
+       confidence_result["confidence"] = "low"
+       confidence_result["score"] = min(confidence_result["score"], 0.4)
+       confidence_result["should_abstain"] = True
+       confidence_result["reason"] = (
+        f"Only {available_history_days} historical days are available, "
+        f"but {window} days are needed for a reliable comparison. "
+        "More historical data is recommended before assigning a primary cause."
+        )
 
     # -----------------------------------------------------
     # Final report

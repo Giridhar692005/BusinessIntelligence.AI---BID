@@ -325,7 +325,27 @@ export default function RootCauseWindow({ file, selectedKpi, availableKpis = [],
           {recommendations.length === 0 && <div className="recommendation-empty">The API response did not include any recommendations for this analysis.</div>}
           {recommendations.map((action, index) => (
             <article className="recommendation-card compact-recommendation" key={index}>
-              <div className="recommendation-header"><div><span className="recommendation-number">#{index + 1}</span><h4>{recommendationText(action)}</h4></div>{action?.score != null && <div className="recommendation-score">{Math.round(action.score * 100)}%</div>}</div>
+              <div className="recommendation-header">
+  <div>
+    <span className="recommendation-number">#{index + 1}</span>
+    <h4>{recommendationText(action)}</h4>
+  </div>
+
+  {(action?.score != null || action?.source) && (
+    <div className="recommendation-meta">
+      {action?.score != null && (
+        <div className="recommendation-score">
+          {Math.round(action.score * 100)}%
+        </div>
+      )}
+      {action?.source && (
+        <span className="recommendation-source">
+          {action.source === "llm" ? "AI-generated" : "Rule-based"}
+        </span>
+      )}
+    </div>
+  )}
+</div>
               {(action?.lever || action?.owner || action?.expected_impact || action?.monitor) && <div className="recommendation-details"><div><span>Lever</span><strong>{action.lever || "—"}</strong></div><div><span>Owner</span><strong>{action.owner || "—"}</strong></div><div><span>Expected impact</span><strong>{action.expected_impact || "—"}</strong></div><div><span>Monitor</span><strong>{action.monitor || "—"}</strong></div></div>}
               <button type="button" className="feedback-trigger" onClick={() => setFeedbackOpen(index)}>Please give your feedback</button>
               {feedbackOpen === index && <div className="feedback-popover" role="dialog" aria-label={`Feedback for recommendation ${index + 1}`}>
@@ -775,6 +795,11 @@ export default function RootCauseWindow({ file, selectedKpi, availableKpis = [],
                     </div>
 
                   )}
+                  {feedbackStatus[index]?.startsWith("Saved") && (
+                   <div className="feedback-learning-note">
+                     This decision is now available to improve future recommendation ranking.
+                   </div>
+                  )}
 
                 </div>
 
@@ -995,11 +1020,123 @@ export default function RootCauseWindow({ file, selectedKpi, availableKpis = [],
               AI Narrative
             </div>
 
-            {renderNarratives()}
+          {renderNarratives()}
+          {result.report?.confidence && (
+          <div className={`confidence-card ${result.report.confidence.confidence}`}>
+            <div>
+             <span className="eyebrow">CONFIDENCE</span>
+              <strong>
+                {String(result.report.confidence.confidence).toUpperCase()}
+              </strong>
+            </div>
+          <span>
+            Score: {Math.round((result.report.confidence.score ?? 0) * 100)}%
+          </span>
+          
+          <p>{result.report.confidence.reason}</p>
 
+          {result.report.confidence.should_abstain && (
+          <strong className="confidence-warning">
+          BID is not confident enough to assign a single root cause.
+          </strong>
+          )}
           </div>
+         )}
+          {result.lineage && (
+        <details className="lineage-card">
+         <summary>
+          Evidence & Lineage
+         </summary>
 
+         <div className="lineage-grid">
+         <div>
+         <span>Data sources</span>
+         <ul>
+          {result.lineage.data_sources?.map((item) => (
+            <li key={item}>✓ {item}</li>
+          ))}
+        </ul>
+        </div>
 
+        <div>
+        <span>Detection methods</span>
+        <ul>
+          {result.lineage.detection_methods?.map((item) => (
+            <li key={item}>✓ {item}</li>
+          ))}
+        </ul>
+        </div>
+
+        <div>
+        <span>Root-cause method</span>
+        <ul>
+          {result.lineage.root_cause_method?.map((item) => (
+            <li key={item}>✓ {item}</li>
+          ))}
+        </ul>
+      </div>
+
+      <div>
+        <span>LLM vs deterministic</span>
+        <strong>Deterministic</strong>
+        <ul>
+          {result.lineage.deterministic_processing?.map((item) => (
+            <li key={item}>✓ {item}</li>
+          ))}
+        </ul>
+
+        <strong>LLM</strong>
+        <ul>
+          {result.lineage.llm_processing?.map((item) => (
+            <li key={item}>✓ {item}</li>
+          ))}
+        </ul>
+       </div>
+        </div>
+        </details>
+        )}
+        {result.telemetry && (
+  <details className="telemetry-card">
+    <summary>Runtime Telemetry</summary>
+
+    <div className="telemetry-grid">
+      <div className="telemetry-item">
+        <span>Analysis latency</span>
+        <strong>{result.telemetry.total_latency_ms} ms</strong>
+      </div>
+
+      <div className="telemetry-item">
+        <span>LLM calls</span>
+        <strong>{result.telemetry.llm_calls}</strong>
+      </div>
+
+      <div className="telemetry-item">
+        <span>LLM tokens</span>
+        <strong>{result.telemetry.llm_tokens.toLocaleString()}</strong>
+      </div>
+
+      <div className="telemetry-item">
+        <span>Estimated cost</span>
+        <strong>${Number(result.telemetry.llm_cost_usd).toFixed(6)}</strong>
+      </div>
+    </div>
+
+       {result.telemetry.llm_requests?.length > 0 && (
+      <div className="telemetry-models">
+        <span>Models used</span>
+        {result.telemetry.llm_requests.map((item, index) => (
+          <div key={index}>
+            <strong>{item.model}</strong>
+            <span>
+              {item.total_tokens?.toLocaleString() ?? 0} tokens · {item.latency_ms ?? 0} ms
+            </span>
+           </div>
+            ))}
+             </div>
+           )}
+           </details>
+          )}
+          </div>
           {/* RECOMMENDATIONS */}
 
           {renderRecommendations()}

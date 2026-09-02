@@ -8,9 +8,11 @@ import AnomalyWindow from "./components/AnomalyWindow";
 import PlotWindow from "./components/PlotWindowClean";
 import StrongAnomalyWindow from "./components/StrongAnomalyWindow";
 import AllKPIWindow from "./components/AllKPIWindow";
+import CustomKPIWindow from "./components/CustomKPIWindow";
 import RootCauseWindow from "./components/RootCauseWindow";
 import ChatDrawer from "./components/ChatDrawer";
 import FloatingChatButton from "./components/FloatingChatButton";
+
 
 const TYPES = {
   anomaly: { label: "Anomaly Detection", icon: "◈" },
@@ -18,6 +20,7 @@ const TYPES = {
   plot: { label: "KPI Plot", icon: "⌁" },
   all: { label: "All KPIs", icon: "▦" },
   root: { label: "Root Cause", icon: "⌕" },
+  custom: { label: "Add KPI", icon: "+KPI" },
 };
 
 function newWindow(type) {
@@ -50,6 +53,8 @@ function App() {
   const [marketingFile, setMarketingFile] = useState(null);
   const [reviewsFile, setReviewsFile] = useState(null);
   const [pipelineRunning, setPipelineRunning] = useState(false);
+  const [customKpis, setCustomKpis] = useState([]);
+
   useEffect(() => {
   if (!file) {
     setAvailableKpis([]);
@@ -133,6 +138,7 @@ function App() {
       return;
     }
     setFile(selected);
+    setCustomKpis([]);
     setNotice(`Loaded ${selected.name}`);
   }
 
@@ -161,6 +167,7 @@ function App() {
       const builtFile = kpisToFile(kpiRows);
 
       setFile(builtFile);
+      setCustomKpis([]);
       setNotice(`Loaded ${kpiRows.length} day(s) of calculated KPIs`);
     } catch (e) {
       setNotice(`Pipeline failed: ${e.message}`);
@@ -227,6 +234,11 @@ function App() {
         return <AllKPIWindow file={file} onKpiSelect={openKpiAnalysis} />;
       case "root":
         return <RootCauseWindow {...common} />;
+      case "custom":
+        return (<CustomKPIWindow file={file} customKpis={customKpis} onCreated={(result, updatedFile) => {setFile(updatedFile); setSelectedKpi(result.metadata.name); setCustomKpis((items) => [...items, result.metadata]);
+        setNotice(`Added KPI: ${result.metadata.name}`);
+      }}/>);
+
       default:
         return null;
     }
@@ -272,8 +284,9 @@ function App() {
                 <div className="analysis-navigation">
                 <button className="tool-button" onClick={() => addWindow("anomaly")}><span className="tool-icon">◈</span><span>Anomaly Detection</span></button>
                 <button className="tool-button" onClick={() => addWindow("strong")}><span className="tool-icon">◆</span><span>Strong Anomaly</span></button>
-                  <button className="tool-button" onClick={() => addWindow("plot")}><span className="tool-icon">⌁</span><span>KPI Plot</span></button>
-                  <button className="tool-button" onClick={() => addWindow("root")}><span className="tool-icon">⌕</span><span>Root Cause</span></button>
+                <button className="tool-button" onClick={() => addWindow("custom")}><span className="tool-icon">★</span> <span>Add KPI</span></button>
+                <button className="tool-button" onClick={() => addWindow("plot")}><span className="tool-icon">⌁</span><span>KPI Plot</span></button>
+                <button className="tool-button" onClick={() => addWindow("root")}><span className="tool-icon">⌕</span><span>Root Cause</span></button>
                 </div>
               </>
             )}

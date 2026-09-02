@@ -110,5 +110,19 @@ BUSINESS_CONFIG = {
        "revenue": ["visitors", "orders", "conversion_rate", "aov", "ad_spend"],
         "orders": ["visitors", "conversion_rate"],
          "cac": ["ad_spend", "orders"]
+    },
+
+    "access_control": {
+        "marketing_manager": {
+          "allowed_kpis": "*",
+          "allowed_sources": "*",
+          "allowed_features": "*"
+        },
+        "sales_ops_manager": {
+          "allowed_kpis": "*",
+          "allowed_sources": "*",
+          "allowed_features": "*"
+        }
     }
+     
 }

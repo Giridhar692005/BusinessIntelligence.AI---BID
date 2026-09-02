@@ -27,6 +27,8 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi import Form
 
 import json
+import hashlib
+
 from report_pdf import create_report_pdf
 from anomaly_detector import detect_anomalies_zscore, detect_anomalies_multi
 from root_cause import full_root_cause_report
@@ -41,8 +43,10 @@ import psycopg2
 from dotenv import load_dotenv
 from database import get_connection
 from io import BytesIO
+from custom_kpi import MAX_CUSTOM_KPIS, CustomKPIError, validate_and_calculate_custom_kpi, merge_kpi_dataframes
 from business_config import BUSINESS_CONFIG
 from recommendation_engine_v5 import rank_actions as rank_v5_actions
+import time
 
 app = FastAPI(title="KPI Anomaly Detection API")
 
@@ -229,14 +233,119 @@ async def get_kpis():
 
 app.include_router(router)
 
+# User-defined KPIs are additive; existing KPIs are never modified.
+# Maximum of 3 custom KPIs per uploaded dataset.
+CUSTOM_KPI_REGISTRY = {}
 
 def _load_csv(file_bytes: bytes) -> pd.DataFrame:
     """Reads uploaded CSV bytes into a DataFrame with a proper date column."""
     df = pd.read_csv(io.BytesIO(file_bytes))
     if "date" in df.columns:
-        df["date"] = pd.to_datetime(df["date"])
+      df["date"] = pd.to_datetime(df["date"], format="mixed", dayfirst=True, errors="coerce")
     return df
 
+@app.post("/custom-kpi/preview")
+async def preview_custom_kpi_data(
+
+    file: UploadFile = File(...),
+    extra_files: list[UploadFile] | None = File(None),
+):
+    contents = await file.read()
+    main_df = _load_csv(contents)
+
+    extra_dfs = []
+
+    for extra_file in extra_files or []:
+        extra_contents = await extra_file.read()
+        if extra_contents.strip(): extra_dfs.append(_load_csv(extra_contents))
+
+    try:
+        combined_df = merge_kpi_dataframes(main_df, extra_dfs)
+    except CustomKPIError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    numeric_columns = []
+    for column in combined_df.columns:
+        if column == "date":
+            continue
+
+        numeric = pd.to_numeric(combined_df[column], errors="coerce")
+        if numeric.notna().any():
+            numeric_columns.append(str(column))
+
+    return {
+        "columns": [str(c) for c in combined_df.columns],
+        "numeric_variables": numeric_columns,
+        "row_count": len(combined_df),
+        "date_start": combined_df["date"].min().strftime("%Y-%m-%d"),
+        "date_end": combined_df["date"].max().strftime("%Y-%m-%d"),
+    }
+
+@app.post("/custom-kpi")
+async def add_custom_kpi(
+    file: UploadFile = File(...),
+    extra_files: list[UploadFile] | None = File(None),
+    name: str = Form(...),
+    definition: str = Form(...),
+    unit: str = Form(""),
+    formula: str = Form(...),
+    driven_by: str = Form(""),
+    drives: str = Form(""),
+    higher_is_better: bool = Form(True),
+    threshold: float = Form(2.5),
+):
+    contents = await file.read()
+    df = _load_csv(contents)
+
+    extra_dfs = []
+    for extra_file in extra_files or []:
+        extra_contents = await extra_file.read()
+        if extra_contents.strip():
+            extra_dfs.append(_load_csv(extra_contents))
+
+    try:
+        df = merge_kpi_dataframes(df, extra_dfs)
+    except CustomKPIError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    # One registry entry per uploaded dataset.
+    file_key = str(hash(contents))
+    registry = CUSTOM_KPI_REGISTRY.setdefault(file_key, {})
+
+    if len(registry) >= MAX_CUSTOM_KPIS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"You can add up to {MAX_CUSTOM_KPIS} custom KPIs to this dataset."
+        )
+
+    try:
+        result = validate_and_calculate_custom_kpi(
+            df,
+            name=name,
+            definition=definition,
+            unit=unit,
+            formula=formula,
+            driven_by=[x.strip() for x in driven_by.split(",") if x.strip()],
+            drives=[x.strip() for x in drives.split(",") if x.strip()],
+            higher_is_better=higher_is_better,
+            threshold=threshold,
+        )
+    except CustomKPIError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    metadata = result["metadata"]
+    registry[metadata["name"].casefold()] = metadata
+
+    output_df = df.copy()
+    output_df[metadata["name"]] = result["values"].to_numpy()
+
+    return {
+        "status": "ok",
+        "metadata": metadata,
+        "custom_kpi_count": len(registry),
+        "custom_kpi_limit": MAX_CUSTOM_KPIS,
+        "columns": [str(c) for c in output_df.columns],
+        "csv": output_df.to_csv(index=False),
+    }
 
 @app.get("/")
 def health_check():
@@ -820,6 +929,7 @@ async def narrative(
         )
     ),
 ):
+    start_time = time.perf_counter()
     """
     Full Business Intelligence pipeline.
 
@@ -984,12 +1094,69 @@ async def narrative(
     primary_driver=root_cause_kpi,
     llm_actions=llm_actions
    )
+    # Safety fallback: V5 should rank all candidates, but if it
+# unexpectedly returns fewer than 3, fill the list from the
+# existing deterministic action catalog.
+    if len(ranked_actions) < 3:
+       fallback_actions = []
+
+       for group in [target_kpi, root_cause_kpi]:
+            if not group:
+                continue
+
+            for action in generate_actions(group):
+                if action.get("action") not in {
+                    item.get("action") for item in ranked_actions
+                }:
+                 fallback_actions.append(action)
+
+    fallback_scores = get_historical_scores(target_kpi)
+    fallback_ranked = rank_actions(
+        fallback_actions,
+        historical_scores=fallback_scores
+    )
+
+    for action in fallback_ranked:
+        if len(ranked_actions) >= 3:
+            break
+
+        if action.get("action") not in {
+            item.get("action") for item in ranked_actions
+        }:
+            ranked_actions.append(action)
+
 
     ranked_actions = ranked_actions[:3]
+    llm_telemetry = []
+
+    for narrative_item in narratives_result.values():
+        if isinstance(narrative_item, dict) and narrative_item.get("telemetry"):
+             llm_telemetry.append(narrative_item["telemetry"])
+
+    for action in llm_actions or []:
+        if action.get("_telemetry"):
+            llm_telemetry.append(action["_telemetry"])
+            break
+
+    total_llm_cost = round(
+    sum(item.get("estimated_cost_usd", 0) for item in llm_telemetry),
+    8
+    )
+
+    total_llm_tokens = sum(
+     item.get("total_tokens", 0) for item in llm_telemetry
+    )
+    elapsed_ms = round((time.perf_counter() - start_time) * 1000, 2)
+
+    telemetry = {
+      "latency_ms": elapsed_ms,
+      "llm_calls": 0,
+      "estimated_cost_usd": 0.0
+     }
     # --------------------------------------------------
     # 8. Return everything
     # --------------------------------------------------
-
+     
     return {
     "report": report,
     "evidence": evidence,
@@ -999,8 +1166,48 @@ async def narrative(
     "decision_engine": {
         "primary_driver": root_cause_kpi,
         "recommendations": ranked_actions
+    },
+
+    "lineage": {
+        "data_sources": [
+            "Uploaded KPI data",
+            "PostgreSQL business data",
+            "Customer reviews / support evidence"
+        ],
+        "detection_methods": [
+            "Rolling Z-score",
+            "Prophet / ensemble"
+        ],
+        "root_cause_method": [
+            "KPI driver comparison",
+            "Multi-KPI overlap analysis",
+            "Product contribution analysis"
+        ],
+        "deterministic_processing": [
+            "Data loading",
+            "KPI calculations",
+            "Anomaly detection",
+            "Driver contribution",
+            "Confidence calculation",
+            "Recommendation ranking"
+        ],
+        "llm_processing": [
+            "Persona-specific narrative generation",
+            "Situation-specific action generation"
+        ]
+    },
+    "telemetry": {
+        "total_latency_ms": round(
+            (time.perf_counter() - start_time) * 1000,
+            2
+        ),
+        "llm_calls": len(llm_telemetry),
+        "llm_tokens": total_llm_tokens,
+        "llm_cost_usd": total_llm_cost,
+        "llm_requests": llm_telemetry
     }
 }
+
 
 @app.post("/report")
 async def generate_report(
@@ -1092,6 +1299,19 @@ async def generate_report(
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
+def check_persona_access(persona: str, resource_type: str, resource_name: str) -> bool:
+    policy = BUSINESS_CONFIG.get("access_control", {})
+    persona_policy = policy.get(persona)
+
+    if not persona_policy:
+        return False
+
+    allowed = persona_policy.get(f"allowed_{resource_type}", [])
+
+    if allowed == "*":
+        return True
+
+    return resource_name in allowed
 
 @app.get("/actions")
 async def get_actions(

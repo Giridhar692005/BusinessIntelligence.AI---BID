@@ -160,7 +160,52 @@ export async function chatWithDataset(file, message, history, pdfFile = null) {
   return response.json();
 }
 
+export async function addCustomKpi(
+  file,
+  extraFiles = [],
+  {
+    name,
+    definition,
+    unit,
+    formula,
+    drivenBy = [],
+    drives = [],
+    higherIsBetter = true,
+    threshold = 2.5
+  }
+) {
+  const formData = new FormData();
 
+  formData.append("file", file);
+  extraFiles.forEach((extraFile) => {
+    formData.append("extra_files", extraFile);
+  });
+
+  formData.append("name", name);
+  formData.append("definition", definition);
+  formData.append("unit", unit);
+  formData.append("formula", formula);
+  formData.append("driven_by", drivenBy.join(","));
+  formData.append("drives", drives.join(","));
+  formData.append("higher_is_better", String(higherIsBetter));
+  formData.append("threshold", String(threshold));
+
+  const response = await fetch(`${API_URL}/custom-kpi`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseError(response));
+  }
+
+  return response.json();
+}
+export async function previewCustomKpiData(file, extraFiles = []) {
+  const formData = new FormData(); formData.append("file", file); extraFiles.forEach(f => formData.append("extra_files", f));
+  const response = await fetch(`${API_URL}/custom-kpi/preview`, { method: "POST", body: formData });
+  if (!response.ok) throw new Error(await parseError(response)); return response.json();
+}
 // Turns the /kpis JSON response into a File object shaped exactly like
 // the CSV every analysis panel already expects (date, revenue,
 // conversion_rate, aov, cac) - so calculated KPIs can be dropped straight

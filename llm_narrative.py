@@ -30,7 +30,7 @@ import json
 import requests
 
 from dotenv import load_dotenv
-
+import time
 from business_config import BUSINESS_CONFIG
 
 from prompts import (
@@ -58,7 +58,35 @@ GROQ_MODEL = os.environ.get(
     "openai/gpt-oss-20b"
 )
 
+def _llm_telemetry(response, started_at):
+    usage = response.json().get("usage") or {}
+    metadata = response.json().get("metadata") or {}
 
+    prompt_tokens = int(usage.get("prompt_tokens", 0) or 0)
+    completion_tokens = int(usage.get("completion_tokens", 0) or 0)
+
+    cost_usd = (
+        prompt_tokens * 0.075 / 1_000_000
+        + completion_tokens * 0.30 / 1_000_000
+    )
+
+    return {
+        "model": GROQ_MODEL,
+        "prompt_tokens": prompt_tokens,
+        "completion_tokens": completion_tokens,
+        "total_tokens": int(
+            usage.get("total_tokens", prompt_tokens + completion_tokens) or 0
+        ),
+        "latency_ms": round(
+            (time.perf_counter() - started_at) * 1000,
+            2,
+        ),
+        "server_time_ms": round(
+            float(metadata.get("total_time", 0) or 0) * 1000,
+            2,
+        ),
+        "estimated_cost_usd": round(cost_usd, 8),
+    }
 # =========================================================
 # PERSONAS
 # =========================================================
@@ -249,7 +277,6 @@ def generate_narrative(
     """
 
     api_key = (api_key or os.environ.get("GROQ_API_KEY"))
-    print("LLM ACTION API KEY FOUND:", bool(api_key))
 
     if not api_key:
 
@@ -315,7 +342,7 @@ def generate_narrative(
     # -----------------------------------------------------
     # Call Groq
     # -----------------------------------------------------
-
+    started_at = time.perf_counter()
     try:
 
         response = requests.post(
@@ -328,7 +355,9 @@ def generate_narrative(
                     f"Bearer {api_key}",
 
                 "Content-Type":
-                    "application/json"
+                    "application/json",
+
+                "Groq-Beta": "inference-metrics",
             },
 
             json={
@@ -355,7 +384,7 @@ def generate_narrative(
 
         data = response.json()
 
-
+        telemetry = _llm_telemetry(response, started_at)
         narrative_text = (
 
             data["choices"]
@@ -399,7 +428,7 @@ def generate_narrative(
                     "should_abstain",
                     False
                 ),
-
+            "telemetry": telemetry,
             "evidence_used":
                 bool(
                     evidence
@@ -419,6 +448,7 @@ def generate_narrative(
 
             "persona_display_name":
                 persona["display_name"],
+
 
             "error":
                 f"Groq API call failed: {str(e)}"
@@ -575,7 +605,7 @@ Return ONLY the JSON object.
         }
     ]
 
-
+    started_at = time.perf_counter()
     try:
 
         response = requests.post(
@@ -588,7 +618,8 @@ Return ONLY the JSON object.
                     f"Bearer {api_key}",
 
                 "Content-Type":
-                    "application/json"
+                    "application/json",
+                "Groq-Beta": "inference-metrics"
             },
 
             json={
@@ -620,7 +651,7 @@ Return ONLY the JSON object.
 
         data = response.json()
 
-
+        telemetry = _llm_telemetry(response, started_at)
         raw_content = (
 
             data["choices"]
@@ -657,7 +688,7 @@ Return ONLY the JSON object.
                     raw_content
             }
 
-
+        factors["_telemetry"] = telemetry
         return factors
 
 
@@ -802,55 +833,46 @@ Return ONLY the JSON array.
         }
     ]
 
-
+    started_at = time.perf_counter()
     try:
+        for attempt in range(3):
+            response = requests.post(
+                GROQ_API_URL,
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                    "Groq-Beta": "inference-metrics",
+                },
+                json={
+                    "model": GROQ_MODEL,
+                    "max_tokens": 450,
+                    "reasoning_effort": "low",
+                    "messages": messages,
+                },
+                timeout=30,
+            )
 
-        response = requests.post(
+            if response.status_code != 429:
+                break
 
-            GROQ_API_URL,
+            retry_after = response.headers.get("retry-after")
+            wait_seconds = (
+                float(retry_after)
+                if retry_after
+                else 2 * (attempt + 1)
+            )
 
-            headers={
-
-                "Authorization":
-                    f"Bearer {api_key}",
-
-                "Content-Type":
-                    "application/json"
-            },
-
-            json={
-
-                "model":
-                    GROQ_MODEL,
-
-                "max_tokens":
-                    700,
-
-                "reasoning_effort":
-                    "low",
-
-                "messages":
-                    messages
-            },
-
-            timeout=30
-        )
-
+            time.sleep(min(wait_seconds, 8))
 
         response.raise_for_status()
-
-
         data = response.json()
-
+        telemetry = _llm_telemetry(response, started_at)
 
         raw_content = (
-
-            data["choices"]
-            [0]["message"]
-            ["content"]
-            .strip()
+            data["choices"][0]["message"]["content"].strip()
         )
 
+        
 
         # -------------------------------------------------
         # Remove optional markdown fences
@@ -926,7 +948,8 @@ Return ONLY the JSON array.
                 action
             )
 
-
+        for action in valid_actions:
+            action["_telemetry"] = telemetry
         return valid_actions
     
 
