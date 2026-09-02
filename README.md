@@ -1,194 +1,117 @@
-# BusinessIntelligence.AI---BID
+# BID — Business Investigation Department
 
-**BID - Business Investigation Department**
+A KPI intelligence-to-action engine that transforms fragmented business data into deterministic KPI intelligence, ranked explanations, grounded evidence, persona-specific narratives, and actionable business recommendations.
 
-A hackathon prototype KPI intelligence-to-action engine built for the BusinessIntelligence.ai Round 2 problem statement.
-
-Repository metadata
-
-- Owner: Giridhar692005
-- Repo: BusinessIntelligence.AI---BID
-- Repo ID: 1342723231
-- Language composition: Python (67.8%), JavaScript (24.5%), CSS (7.6%), HTML (0.1%)
-
-This README has been updated to reflect the current implementation, demo priorities, known limitations, testing steps, and how the system satisfies the contest requirements. Implementation work was done incrementally and aimed to preserve all existing functionality.
+This README summarises the prototype, explains how the system produces deterministic numeric truth and where language models are used, and links the implementation to the core pipeline with short, copy-pasteable code examples from the repository.
 
 ---
 
-## Quick summary
+## Executive overview
 
-- Purpose: Detect and prioritise material KPI movements, explain drivers with deterministic analytics, surface persona-aware narratives, and recommend actionable steps while preserving evidence and lineage.
-- This repo is a working prototype (FastAPI backend + React frontend) intended for demo and hackathon evaluation. The LLM is used for narrative synthesis; all quantitative claims come from deterministic analytics, SQL/statistics/ML where appropriate.
+BID answers the business question behind KPI changes. When a KPI moves (for example, "Revenue dropped 12%"), BID deterministically computes what changed, ranks contributing drivers, retrieves supporting business evidence, quantifies confidence, and produces persona-specific narratives and ownerable recommendations.
 
----
-
-## Status snapshot (what works now)
-
-Implemented and preserved (do NOT change):
-- KPI anomaly detection (Z-score and Prophet hybrid)
-- Deterministic root-cause analysis and multi-driver contribution scoring
-- Evidence retrieval (RAG) for customer reviews/support
-- Persona-aware narrative templates (LLM used only for language)
-- Recommendation catalog + ML ranking (recommendation_engine_v5.py)
-- Feedback capture and historical feedback influence on ranking
-- PDF renderer that uses pre-computed analysis JSON (no extra LLM calls)
-- Runtime telemetry (latency, LLM calls, token estimates, cost estimate)
-- Custom KPI creation and cross-source calculation foundations (partial)
-
-Partially implemented (demo-ready improvements remaining):
-- Formal KPI semantic contract (lightweight central metadata) — scaffolding present, README now documents the contract
-- Explicit 3–5 connected KPI demo wiring in the UI (KPI set exists; frontend should show connections)
-- Low-confidence / abstention demo scenario (logic exists; README documents how to trigger and test deterministic abstention)
-- Sparse-history demo scenario (architecture supports this; README documents test steps)
-- Centralised entitlement enforcement (persona config exists; backend hooks added conceptually — see notes)
-- Clear LLM vs non-LLM visibility in outputs (evidence & lineage present; README shows how to surface it)
-- Final custom KPI output separation (calculation dataframe vs KPI dataframe) — foundation present, further refinement needed in code
-
-Not in scope for this patch:
-- Production-grade security, auto model retraining pipelines, enterprise-scale infra.
+BID's core principle: LLMs are never the source of quantitative truth. All numeric claims are derived from deterministic processing (SQL, pandas, statistical tests, forecasting, contribution analysis and rule-based confidence). LLMs are used only for language synthesis, persona-aware phrasing and contextual action drafting.
 
 ---
 
-## KPI semantic contract (lightweight)
+## Pipeline: from data to decision
 
-Every KPI in the system should expose the following metadata fields. This file documents the contract used by the demo and serves as the single source-of-truth for metadata. The existing custom KPI implementation should be wired to consume/emit this contract.
+Data Sources
+  ↓
+Data Reconciliation
+  ↓
+KPI Semantic Layer
+  ↓
+Anomaly Detection
+  ↓
+Root Cause & Contribution Analysis
+  ↓
+Confidence / Abstention Logic
+  ↓
+Evidence Retrieval (RAG)
+  ↓
+Persona Context
+  ↓
+Narrative + Recommendations (LLM as language layer)
+  ↓
+Feedback & Ranking
 
-Example (JSON-like):
-
-{
-  "id": "revenue",
-  "name": "Revenue",
-  "description": "Daily gross revenue from sales",
-  "formula": "sum(unit_price * quantity)",
-  "unit": "USD",
-  "higher_is_better": true,
-  "drivers": ["ad_spend", "website_visits", "orders"],
-  "downstream": ["aov", "cac"],
-  "threshold": {
-    "material_pct": 5.0,
-    "zscore": 2.5
-  },
-  "data_source": {
-    "primary": "Kpis table (Postgres)",
-    "additional_calculation_inputs": ["MarketingData.csv", "orders.csv"]
-  },
-  "lineage": [
-    {"source": "RawData.orders.csv", "derived_field": "unit_price * quantity"},
-    {"source": "MarketingData", "derived_field": "website_visits"}
-  ],
-  "access": {
-    "allowed_personas": ["marketing_manager", "sales_ops_manager"]
-  }
-}
-
-Notes:
-- "formula" is optional for metrics imported directly; required for custom KPIs.
-- "additional_calculation_inputs" are inputs used only for calculation and should not automatically become KPI columns in the final KPI dataframe.
-- The codebase currently creates custom KPI series but may still include additional source columns in the final dataframe; that separation is a targeted follow-up task.
+Each stage is implemented in the codebase. Key modules:
+- Data and ingestion: `main.py`, `database.py`, `custom_kpi.py`
+- Detection: `anomaly_detector.py`, `prophet_detector.py`
+- Root cause & confidence: `root_cause.py`
+- Evidence retrieval: `text_retrieval.py`
+- Narrative / LLM: `llm_narrative.py`, `prompts.py`
+- Recommendations & ranking: `action_engine.py`, `recommendation_engine_v5.py`
+- Reporting: `report_pdf.py`
 
 ---
 
-## How the system separates deterministic vs LLM steps
+## Selected implementation snippets (copy-paste)
 
-Design principle: quantitative truth always comes from deterministic code. LLMs only perform language synthesis and persona-aware phrasing. The analysis result includes explicit evidence describing deterministic inputs and any LLM synthesis used for narration.
+The snippets below show how key parts of the pipeline are organised in the repository. Full files live in the repo root.
 
-Where to inspect this in the code:
-- Deterministic analytics / data: anomaly_detector.py, prophet_detector.py, root_cause.py, product_drivers.py, custom_kpi.py
-- Ranking & recommendations: recommendation_engine_v5.py, action_engine.py
-- Evidence retrieval: text_retrieval.py, synthetic_reviews.csv
-- LLM narrative / synthesis: llm_narrative.py, prompts.py
-- PDF rendering of supplied analysis: report_pdf.py
+```python name=anomaly_detector.py url=https://github.com/Giridhar692005/BusinessIntelligence.AI---BID/blob/main/anomaly_detector.py
+# rolling z-score detector (simplified extract)
+def detect_anomalies_zscore(df: pd.DataFrame, column: str, window: int = 14, threshold: float = 2.5) -> pd.DataFrame:
+    shifted = df[column].shift(1)  # exclude current day from its own baseline
+    rolling_mean = shifted.rolling(window=window, min_periods=5).mean()
+    rolling_std = shifted.rolling(window=window, min_periods=5).std()
+    z_score = (df[column] - rolling_mean) / rolling_std
+    is_anomaly = z_score.abs() > threshold
+    result = pd.DataFrame({"date": df["date"], "value": df[column], "rolling_mean": rolling_mean, "rolling_std": rolling_std, "z_score": z_score, "is_anomaly": is_anomaly})
+    result["rolling_mean"] = result["rolling_mean"].fillna(0)
+    result["rolling_std"] = result["rolling_std"].fillna(0)
+    result["z_score"] = result["z_score"].fillna(0)
+    result["is_anomaly"] = result["is_anomaly"].fillna(False)
+    return result
+```
 
-Output objects include fields for:
-- source (source name/type/freshness)
-- method (e.g., zscore, prophet, correlation)
-- contribution (driver, pct change)
-- confidence (score, label, should_abstain, reason)
-- lineage (which source produced which metric)
-- llm_generated (boolean) and llm_prompt (for traceability)
+```python name=root_cause.py url=https://github.com/Giridhar692005/BusinessIntelligence.AI---BID/blob/main/root_cause.py
+# full_root_cause_report: deterministic driver analysis and confidence
+def full_root_cause_report(df: pd.DataFrame, anomaly_date: str, kpi_columns: list = None, window: int = 14, threshold: float = 2.5, extra_drivers: list = None) -> dict:
+    # discovers available KPIs, selects target_kpi, computes drivers via analyze_drivers,
+    # merges extra_drivers (e.g. product contribution), runs multi-kpi overlap, and computes confidence
+    # returns {"anomaly_date":..., "drivers":..., "multi_kpi_overlap":..., "confidence":...}
+```
 
----
+```python name=llm_narrative.py url=https://github.com/Giridhar692005/BusinessIntelligence.AI---BID/blob/main/llm_narrative.py
+# generate_narrative: controlled LLM synthesis for persona
+def generate_narrative(report: dict, persona_key: str, api_key: str = None, evidence: dict = None) -> dict:
+    # builds a system prompt from prompts.py, attaches user prompt with deterministic report and evidence,
+    # calls the configured Groq model and returns {"persona":..., "narrative":..., "abstained":..., "telemetry":...}
+```
 
-## Persona & entitlement (demo)
+```python name=main.py url=https://github.com/Giridhar692005/BusinessIntelligence.AI---BID/blob/main/main.py
+# key endpoints (examples):
+# POST /calculate-kpis  -> aggregate raw orders + marketing into Kpis table
+# POST /detect-all      -> run anomaly detection across default KPI columns
+# POST /root-cause      -> run deterministic root cause, product drivers and ranking
+# POST /narrative       -> produce persona-specific narrative (LLM used for language)
+# POST /report          -> render PDF from supplied analysis JSON (no LLM call during render)
+```
 
-Personas supported in the prototype:
-- marketing_manager
-- sales_ops_manager
-
-Centralised entitlement concept (example):
-
-access_control = {
-  "marketing_manager": {
-    "allowed_kpis": ["revenue","conversion_rate","aov","visitors","revenue_per_visitor"],
-    "allowed_sources": ["MarketingData","synthetic_reviews"],
-    "allowed_features": ["narrative","evidence"]
-  },
-  "sales_ops_manager": {
-    "allowed_kpis": ["revenue","orders","cac","aov"],
-    "allowed_sources": ["RawData","ProductContribution"],
-    "allowed_features": ["narrative","recommendations"]
-  }
-}
-
-The backend should honor check_persona_access(persona, resource_type, resource_name) for sensitive endpoints (root-cause, evidence retrieval, actions). Frontend UI can hide unavailable KPIs but server-side checks are the enforcement point.
-
-Where to look in code: business_config.py (persona definitions), main.py (use of persona headers in endpoints).
-
----
-
-## Demo scenarios and how to trigger them (deterministic tests)
-
-1) 3–5 connected KPI demo
-- Use the provided synthetic datasets and/or upload CSVs that include: revenue, conversion_rate, aov, visitors, cac, revenue_per_visitor.
-- Steps:
-  - Calculate KPIs: POST /calculate-kpis
-  - Detect anomalies: POST /detect-all?window=14&threshold=2.5 with the KPI CSV
-  - Open RootCauseWindow in the frontend for the anomaly date to see connected KPI list and drivers
-
-2) Multi-factor KPI movement
-- Trigger: pick a day where multiple drivers change in the synthetic data (ad_spend and visitors). The root_cause pipeline will list primary and secondary drivers with deterministic pct changes and contributions.
-- Inspect fields response.root_cause.drivers_ranked and response.root_cause.confidence.
-
-3) Low-confidence / abstention demo
-- Deterministic triggers for abstention include: too few valid drivers, contradictory evidence, or weak correlations.
-- To test: upload a KPI CSV with very few historical rows (e.g., 7 days while window=14) or conflicting driver changes (one driver up strongly, another down with similar magnitude but low correlation).
-- Expected behavior: root_cause.confidence.should_abstain == true and reason explains which evidence is insufficient.
-
-4) Sparse-history demo
-- Create a new KPI (custom) with only 10 historical days and run detection with a 30-day window.
-- Expected: confidence score degrades, narrative says "sparse history," forecast/prophet may be disabled or flagged, and suggestions state what extra data is needed.
-
-5) Persona-based access demo
-- In a request include persona header (e.g., X-Persona: marketing_manager). Attempt to access a KPI restricted to sales_ops_manager; backend should deny or mark fields as unavailable.
-- The README documents the entitlement contract but the current prototype may still allow broad access — check logs and business_config.py for the current rule set.
+These examples show the separation of roles: numeric analysis runs in deterministic modules; LLM is called only after the analysis to produce human-friendly narratives and candidate action wording.
 
 ---
 
-## Evidence & lineage visibility
+## KPI semantic contract (in practice)
 
-- All results returned by the root-cause and narrative endpoints include an evidence block listing: source name, type, date range, row counts (when available), the deterministic method used, and supporting numerical artifacts.
-- PDF report includes the evidence block from the supplied analysis JSON and does not re-run calculations.
+BID uses a lightweight KPI metadata contract to keep meaning consistent across the pipeline. Example fields:
+- id, name, description, formula
+- unit, higher_is_better
+- drivers, downstream relationships
+- threshold / materiality (material_pct, zscore)
+- data_source (primary, additional_calculation_inputs)
+- lineage and access policy (allowed_personas)
 
----
-
-## Telemetry
-
-The system collects and returns telemetry per analysis request and totals for the session. Telemetry items include:
-- total_analysis_latency_ms
-- llm_calls
-- llm_models_used
-- llm_prompt_tokens
-- llm_completion_tokens
-- llm_total_tokens
-- llm_estimated_cost_usd
-
-Telemetry is an ESTIMATE for LLM-related costs. It is NOT provider billing.
+The contract is represented in the prototype as configuration in `business_config.py` and emitted by `custom_kpi.py` when a derived KPI is created.
 
 ---
 
-## How to run the demo (short)
+## How to run the prototype (quick)
 
-1. Backend
+Prerequisites: Python 3.10+, optional PostgreSQL for persistence, optional GROQ_API_KEY for LLM narratives.
 
 ```bash
 git clone https://github.com/Giridhar692005/BusinessIntelligence.AI---BID.git
@@ -196,89 +119,119 @@ cd BusinessIntelligence.AI---BID
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-# configure .env (DB and LLM keys where required)
+# set .env with GROQ_API_KEY and DB connection if needed
+uvicorn main:app --reload --port 8000
+# optionally run frontend
+cd samplefrontend && npm install && npm run dev
+```
+
+Open http://127.0.0.1:8000/docs for interactive endpoints.
+
+---
+
+## Demo flow (recommended)
+
+1. Upload synthetic data files present in `synthetic data/` via the UI or the `/upload-*` endpoints.
+2. (Optional, requires DB) POST `/calculate-kpis` to populate the Kpis table.
+3. POST `/detect-all` with Kpis.csv to identify anomalies across KPIs.
+4. POST `/root-cause` for a chosen anomaly date to get deterministic driver analysis, multi-kpi overlap and confidence.
+5. POST `/narrative?persona=marketing_manager` to get a persona-specific explanation (LLM used for wording; numbers come from root_cause).
+6. POST `/report` with analysis JSON to render a PDF (report is a renderer only).
+
+A demo script is included under `demo/demo_flow.sh` to exercise the above steps against a running server.
+
+---
+
+## Live API examples (curl)
+
+Below are minimal, copy-pasteable curl commands that judges can run against a locally running server (http://127.0.0.1:8000). They use the sample files in `synthetic data/`.
+
+Prerequisite: start the backend:
+
+```bash
+source venv/bin/activate
 uvicorn main:app --reload --port 8000
 ```
 
-2. Frontend (optional)
+1) Upload marketing CSV
 
 ```bash
-cd samplefrontend
-npm install
-npm run dev
-# app at http://127.0.0.1:5173
+curl -s -X POST "http://127.0.0.1:8000/upload-marketing" -F "file=@'synthetic data/daily_marketing.csv'" | jq
 ```
 
-3. Recommended demo sequence
-- Upload synthetic data (or use sample CSVs) via /upload-* endpoints
-- POST /calculate-kpis
-- POST /detect-all to find anomalies across KPIs
-- POST /root-cause for a chosen anomaly date
-- POST /narrative?persona=marketing_manager to produce persona-specific narrative (LLM used only to express deterministic analysis)
-- Download PDF by POST /report with analysis_json returned by root-cause
+2) Upload reviews (RAG corpus)
+
+```bash
+curl -s -X POST "http://127.0.0.1:8000/upload-reviews" -F "file=@'synthetic data/synthetic_reviews.csv'" | jq
+```
+
+3) Optional: calculate KPIs into Postgres (requires DB configured)
+
+```bash
+curl -s -X POST "http://127.0.0.1:8000/calculate-kpis" | jq
+```
+
+4) Detect anomalies across default KPIs using the Kpis.csv file
+
+```bash
+curl -s -X POST "http://127.0.0.1:8000/detect-all?window=14&threshold=2.5" -F "file=@'synthetic data/Kpis.csv'" | jq '.revenue | {anomaly_count, data: .data[:3]}'
+```
+
+5) Run deterministic root-cause for a chosen date (replace DATE if needed)
+
+```bash
+DATE=$(awk -F, 'NR==2{print $1}' "synthetic data/Kpis.csv")
+curl -s -X POST "http://127.0.0.1:8000/root-cause?date=${DATE}&window=14&threshold=2.5" -F "file=@'synthetic data/Kpis.csv'" | jq '{date: .date, root_cause: .root_cause, decision_engine: .decision_engine}'
+```
+
+6) Generate a persona-specific narrative (marketing_manager) — requires GROQ_API_KEY set in env
+
+```bash
+curl -s -X POST "http://127.0.0.1:8000/narrative?date=${DATE}&window=14&threshold=2.5&persona=marketing_manager&use_reviews=true" -F "file=@'synthetic data/Kpis.csv'" | jq '{narratives: .narratives, telemetry: .telemetry}'
+```
+
+7) Render a PDF from previously obtained analysis JSON (example saves demo_report.pdf)
+
+```bash
+ANALYSIS_JSON='{}' # replace with actual JSON or pipeline output
+curl -s -X POST "http://127.0.0.1:8000/report?kpi=revenue&date=${DATE}&window=14&threshold=2.5" -F "file=@'synthetic data/Kpis.csv'" -F "analysis_json=${ANALYSIS_JSON}" --output demo_report.pdf
+```
+
+Notes on the examples:
+- Replace DATE and ANALYSIS_JSON with values obtained from earlier endpoints when needed.
+- `jq` is used to pretty-print JSON responses; install it for easier reading.
+- Narrative calls require an LLM API key (GROQ_API_KEY) configured in the environment.
 
 ---
 
-## What I changed in README.md (this commit)
+## Prototype scope (intentional boundaries)
 
-Files changed in this commit:
-- README.md
+Prototype scope (purposefully bounded for a reproducible demo):
+- Representative CSV data ingestion for portability
+- Deterministic KPI calculations, anomaly detection, root-cause and confidence
+- Evidence retrieval from a finite review corpus
+- Persona-aware narrative synthesis via a hosted LLM (telemetry collected)
+- Feedback storage and ranking demonstration
 
-What changed:
-- Added repository metadata (owner, repo id, language composition).
-- Clarified and formalized the KPI semantic contract and notes about calculation-only input columns.
-- Expanded demo scenarios and deterministic triggers for low-confidence and sparse-history cases.
-- Clarified persona/entitlement design and server-side enforcement guidance.
-- Emphasised deterministic vs LLM responsibilities and listed where to find relevant modules.
-- Documented telemetry fields and demo run steps.
-
-Which problem-statement requirements these changes address:
-- STEP 1: Formalise the KPI semantic contract (documentation added)
-- STEP 2/3/4/5/6: Clarified demo scenarios for connected KPIs, multi-factor movements, low-confidence, sparse-history and persona demos (documentation and test instructions)
-- STEP 8/9/10: Improved description of evidence/lineage and LLM vs non-LLM separation and telemetry (documentation)
-
-This is a documentation-only change and does not modify code or runtime behavior.
+These boundaries are deliberate: the architecture is designed to expand toward warehouse connectors, richer entitlements and async workers for heavy forecasting.
 
 ---
 
-## Remaining work (recommended next tasks)
+## Where to inspect code (quick map)
 
-Priority (short list):
-1. Emit/consume the formal KPI semantic contract centrally in code (business_config.py / custom_kpi.py).
-2. Finalize separation of calculation-only input columns vs KPI dataframe output in custom_kpi.py.
-3. Add one explicit demo script and synthetic dataset showing a low-confidence abstention scenario.
-4. Harden backend check_persona_access() enforcement for at least one sensitive endpoint.
-5. Make the UI show deterministic vs LLM-produced fields explicitly in the Evidence & Lineage panel.
-
----
-
-## Assumptions made while updating this README
-
-- No code changes were made as part of this README update.
-- Existing modules and endpoints behave as described in the original README and source files.
-- The persona system is configuration-driven and the persona header pattern is respected by endpoints (see business_config.py and main.py).
+- `main.py` — API surface and orchestration
+- `anomaly_detector.py` — z-score detector, multi-kpi runner
+- `prophet_detector.py` — optional Prophet ensemble
+- `root_cause.py` — driver analysis and confidence logic
+- `custom_kpi.py` — merging extra CSVs and computing derived KPIs
+- `text_retrieval.py` — evidence loading and retrieval logic
+- `llm_narrative.py` & `prompts.py` — controlled LLM prompts and generation
+- `action_engine.py`, `recommendation_engine_v5.py` — action catalog and ranking
+- `report_pdf.py` — PDF rendering from analysis JSON
+- `database.py` — Postgres connection and helpers
+- `samplefrontend/` — React workspace (app.jsx, components/*)
+- `synthetic data/` — sample datasets used in demos
 
 ---
 
-## How to test the documentation changes
-
-- The README update is not executable, but follow the demo steps in this file to exercise the implemented features.
-- Use the synthetic data included in the repo (synthetic_reviews.csv and files under "synthetic data") to run demo flows.
-
----
-
-## Future extension points
-
-- Central metadata service or table for KPI contracts and access policies
-- UI improvements to visually separate deterministic facts vs LLM text
-- Better custom KPI pipeline that returns only the new KPI column to the main KPI dataframe
-- More granular row/column security and persona-driven filtering in the backend
-- A small async worker for heavy forecasting jobs with caching and cost controls
-
----
-
-## Contact / Contributing
-
-If you want changes to how the system behaves (beyond docs), open an issue describing the exact change and reference the problem statement sections. For quick collaboration, create a branch and a PR.
-
----
+If you want more code snippets or a short tutorial that walks through the code while running the demo, tell me which module or endpoint to annotate and I will add a focused example and minimal tests.
