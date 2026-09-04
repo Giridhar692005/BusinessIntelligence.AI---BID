@@ -1,6 +1,7 @@
 ># NOTICE
 >
->  **📌 Important Reference Files & Project Demo**
+>**📌 Important Reference Files & Project Demo**
+>**Actually, my last try to submit had an issue so I could not submit please see the files in my read me for the latest details of my project**
 >
 > The latest **PPT and PDF versions of our business proposal and README** are available in the above "Proposals and sample report made" folder:
 > - **`Updated_THE AInimators_IIT(ISM)DHANBAD_Business Proposal.pdf`** — Latest detailed business proposal PDF
@@ -12,6 +13,7 @@
 > 🔗 **https://drive.google.com/drive/folders/13QgFUzpyblYOpQLPfginlz-UaxvFDVP-?usp=drive_link** 
 >
 > Please use the above proposal files and the linked demo as the primary references for understanding the project's intended solution, workflow, and actual working.
+
 
 
 
