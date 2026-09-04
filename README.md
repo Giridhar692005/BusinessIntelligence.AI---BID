@@ -1,3 +1,19 @@
+> **📌 Important Reference Files & Project Demo**
+>
+> The latest **PPT and PDF versions of our business proposal and README** are available in the above "Proposals and sample report made" folder:
+> - **`Updated_THE AInimators_IIT(ISM)DHANBAD_Business Proposal.pdf`** — Latest detailed business proposal PDF
+> - **`THEAInimators_IIT(ISM)DHANBAD_BusinessProposal.pptx`** — Latest detailed business proposal PPTX
+> - **`THEAInimators_IIT(ISM)DHANBAD_README.pdf`** — Latest detailed README
+>
+> **⚠️ Demo Video: ** The previously uploaded project video was incorrect. Please refer to the **Google Drive link below** for the exact working and current implementation of the BID project:
+>
+> 🔗 **https://drive.google.com/drive/folders/13QgFUzpyblYOpQLPfginlz-UaxvFDVP-?usp=drive_link** 
+>
+> Please use the above proposal files and the linked demo as the primary references for understanding the project's intended solution, workflow, and actual working.
+
+
+
+
 # BusinessIntelligence.AI---BID
 
 **BID - Business Investigation Department**
