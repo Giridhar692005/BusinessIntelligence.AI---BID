@@ -1,4 +1,4 @@
->***NOTICE***
+># NOTICE
 >
 >  **📌 Important Reference Files & Project Demo**
 >
