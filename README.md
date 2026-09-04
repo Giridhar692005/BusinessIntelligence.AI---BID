@@ -1,4 +1,5 @@
-> **📌 Important Reference Files & Project Demo**
+>***NOTICE**
+>  **📌 Important Reference Files & Project Demo**
 >
 > The latest **PPT and PDF versions of our business proposal and README** are available in the above "Proposals and sample report made" folder:
 > - **`Updated_THE AInimators_IIT(ISM)DHANBAD_Business Proposal.pdf`** — Latest detailed business proposal PDF
